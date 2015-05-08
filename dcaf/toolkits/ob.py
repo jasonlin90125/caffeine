@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
-"""
-OpenBabel toolkit for DCAF
+"""OpenBabel toolkit for DCAF"""
 
-Created on Tue Feb 10 15:51:16 2015
-@author: Marta Stepniewska
-"""
 from dcaf import PHARS, Pharmacophore
 import pybel
 import openbabel as ob
@@ -17,13 +13,15 @@ PATTERNS = {phar: pybel.Smarts(smarts) for (phar, smarts) in PHARS.iteritems()}
 
 
 def __count_bonds(a1, a2, exclude):
-    """
-    Count number of bonds between two pharmacophore points, if the shortest
+    """Count number of bonds between two pharmacophore points, if the shortest
     path does not contain any other pharmacophore point.
 
-    arguments:
-        a1, a2 - OBAtom
-        exclude - list of atoms (ids) that cannot be in the shortest path
+    Args:
+       a1, a2 (OBAtom): source and target atoms
+       exclude (list): atoms (ids) that cannot be in the shortest path
+
+    Returns:
+       int: number of bonds in path or -1 if there is no path between a1 and a2
     """
     visited = []
     bonds_nr = -1
@@ -43,9 +41,7 @@ def __count_bonds(a1, a2, exclude):
 
 
 def phar_from_mol(ligand):
-    """
-    Create Pharmacophore from given pybel.Molecule object.
-    """
+    """Create Pharmacophore from given pybel.Molecule object."""
     if not isinstance(ligand, pybel.Molecule):
         raise TypeError("Invalid ligand! Expected pybel.Molecule object, got "
                         "%s instead" % type(ligand).__name__)
@@ -92,9 +88,7 @@ def phar_from_mol(ligand):
 
 
 def layout(p):
-    """
-    Calculate points positions for depiction of Pharmacophore p using OpenBabel.
-    """
+    """Calculate points positions for depiction of Pharmacophore p using OpenBabel."""
     if not isinstance(p, Pharmacophore):
         raise TypeError("Expected Pharmacophore object, got %s instead" %
                         type(p).__name__)

@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-RDKit toolkit for DCAF
-
-Created on Tue Feb 10 15:51:16 2015
-@author: Marta Stepniewska
-"""
+"""RDKit toolkit for DCAF"""
 
 from dcaf import PHARS, Pharmacophore
 from rdkit import Chem
@@ -18,13 +13,16 @@ PATTERNS = {phar: Chem.MolFromSmarts(smarts) for (phar, smarts) in PHARS.iterite
 
 
 def __count_bonds(ligand, a1, a2, exclude):
-    """
-    Count number of bonds between two pharmacophore points, if the shortest
+
+    """Count number of bonds between two pharmacophore points, if the shortest
     path does not contain any other pharmacophore point.
 
-    arguments:
-        a1, a2 - OBAtom
-        exclude - list of atoms (ids) that cannot be in the shortest path
+    Args:
+       a1, a2 (int): source and target atoms
+       exclude (list): atoms (ids) that cannot be in the shortest path
+
+    Returns:
+       int: number of bonds in path or -1 if there is no path between a1 and a2
     """
 
     visited = []
@@ -44,9 +42,7 @@ def __count_bonds(ligand, a1, a2, exclude):
 
 
 def phar_from_mol(ligand):
-    """
-    Create Pharmacophore from given RDKit.Chem.Mol object.
-    """
+    """Create Pharmacophore from given RDKit.Chem.Mol object."""
     if not isinstance(ligand, Chem.Mol):
         raise TypeError("Invalid ligand! Expected RDKit.Chem.Mol object, got "
                         "%s instead" % type(ligand).__name__)
@@ -92,9 +88,7 @@ def phar_from_mol(ligand):
 
 
 def layout(p):
-    """
-    Calculate points positions for depiction of Pharmacophore p using RDKit.
-    """
+    """Calculate points positions for depiction of Pharmacophore p using RDKit."""
     if not isinstance(p, Pharmacophore):
         raise TypeError("Expected Pharmacophore object, got %s instead" %
                         type(p).__name__)

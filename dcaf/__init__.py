@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
 """
-Discrimination, Comparison, Alignment tool for small molecules
+DCAF (decaf) - Discrimination, Comparison, Alignment tool for small molecules.
 
 Created on Tue Feb 10 15:51:16 2015
-@author: Marta Stepniewska
+by Marta Stepniewska
 """
 
 import numpy as np
 
 
 #SMARTS definition of pharmacophore points:
-
 PHARS = {"HH": "[#6+0!$(*~[#7,#8,F]),SH0+0v2,s+0,S^3,Cl+0,Br+0,I+0]",  # hydrophobic
          "AR": "[a]",  # aromatic
          "HA": "[$([O,S;H1;v2]-[!$(*=[O,N,P,S])]),$([O,S;H0;v2]),"
@@ -27,41 +26,41 @@ COLORS = {"HH": "#FFFF00",  # hydrophobic
 
 
 class Pharmacophore(object):
-    """
-    Graph-like object representing pharmacophore.
+    """Graph-like object representing pharmacophore.
 
-    atributes:
-        nodes - list of dicts representing nodes
-            each node has:
-               label - any hashable (e.g. atom index)
-               freq - node frequency (float)
-               type - dictionary describing its pharmacophoric properties,
-                   where keys are points types and values are numbers of
-                   molecules with this property
+    Args:
+       nodes (list): list of dicts representing nodes
+          each node has:
+             * label (any hashable): node label, e.g. atom index
+             * freq (float): node frequency
+             * type (dict): dictionary describing its pharmacophoric
+               properties, where keys are points types and values are numbers
+               of molecules with this property
 
-            e.g. common part of C2H5NH2 and N(C2H5)3 molecules would be coded as:
-            [{"label": 0, "freq": 2.0, "type": {"HA": 2.0, "HD": 1.0}},
-             {"label": 1, "freq": 2.0, "type": {"HH": 2.0}}]
+             e.g. common part of C2H5NH2 and N(C2H5)3 molecules would be coded as:
+                [{"label": 0, "freq": 2.0, "type": {"HA": 2.0, "HD": 1.0}},
+                {"label": 1, "freq": 2.0, "type": {"HH": 2.0}}]
 
-        edges - symmetrical numpy array with zeros at diagonal, where
-            edges[i, j] is edge lenght, expressed in number of bonds in
-            molecule (0.0 means that i and j are not connected)
+       edges (numpy array): symmetrical array with zeros at diagonal, where
+         edges[i, j] is edge lenght, expressed in number of bonds in
+         molecule (0.0 means that i and j are not connected)
 
-        molecules - number of molecules used to create model (float)
+        molecules (float): number of molecules used to create model
 
-        title - pharmacophore description (string)
+        title (str): pharmacophore description
+        
+    Example:
+       Pharmacophore created manualy from C2H5NH2 and N(C2H5)3 molecules:
+
+       >>> nodes = [{"label": "N", "freq": 2.0, "type": {"HA": 2.0, "HD": 1.0}},
+       ... {"label": "CH3", "freq": 2.0, "type": {"HH": 2.0}}]
+       >>> edges = np.array([[0,2],[2,0]])
+       >>> p = Pharmacophore(nodes=nodes, edges=edges, molecules=2,
+       ... title="C2H5NH2+N(C2H5)3")
     """
 
     def __init__(self, nodes, edges, molecules=1.0, title="Pharmacophore"):
-        """
-        Example:
-          #pharmacophore created manualy from C2H5NH2 and N(C2H5)3 molecules
-          nodes = [{"label": "N", "freq": 2.0, "type": {"HA": 2.0, "HD": 1.0}},
-                   {"label": "CH3", "freq": 2.0, "type": {"HH": 2.0}}]
-          edges = np.array([[0,2],[2,0]])
-          p = Pharmacophore(nodes=nodes, edges=edges, molecules=2,
-                            title="C2H5NH2+N(C2H5)3")
-        """
+
         if not isinstance(nodes, list):
             raise TypeError("Invalid nodes list!")
 
@@ -103,8 +102,13 @@ class Pharmacophore(object):
 
     @staticmethod
     def check_node(node):
-        """
-        Check if node is valid.
+        """Check if node is valid.
+
+        Args:
+           node (dict): node to check
+
+        Returns:
+           bool: True if node is valid, False otherwise. 
         """
         has_type = False
         has_label = False
@@ -137,8 +141,13 @@ class Pharmacophore(object):
 
     @staticmethod
     def check_edges(edges):
-        """
-        Check if edges array is valid.
+        """Check if edges array is valid.
+
+        Args:
+           edges (numpy array): array representing edges in the graph
+
+        Returns:
+           bool: True if array is valid, False otherwise.
         """
         if (edges.T == edges).all() and (edges.diagonal() == 0).all() and \
            np.min(edges) >= 0:
@@ -147,15 +156,16 @@ class Pharmacophore(object):
             return False
 
     def copy(self):
-        """
-        Generarte deep copy of a Pharmacophore.
-        """
+        """Generarte deep copy of a Pharmacophore."""
         from copy import deepcopy
         return deepcopy(self)
 
     def add_edge(self, i, j, dist):
-        """
-        Add edge of length dist between nodes i and j.
+        """Add edge of length dist between nodes i and j.
+
+        Args:
+           i, j (int): nodes indices
+           dist (float): edges length
         """
         if not isinstance(i, int) or not isinstance(j, int):
             raise TypeError("Node indicies must be int!")
@@ -173,14 +183,17 @@ class Pharmacophore(object):
             self.edges[i, j] = self.edges[j, i] = dist
 
     def add_node(self, node):
-        """
-        Add node to Pharmacophore.
+        """Add node to Pharmacophore.
+
+        Args:
+           node (dict): node representation
         """
         if not isinstance(node, dict):
             raise TypeError("Invalid node!")
         if Pharmacophore.check_node(node):
             self.nodes.append(node.copy())
-            self.edges = np.append(np.append(self.edges, np.zeros((1, self.numnodes)),
+            self.edges = np.append(np.append(self.edges,
+                                             np.zeros((1, self.numnodes)),
                                              axis=0),
                                    np.zeros((self.numnodes+1, 1)), axis=1)
             self.numnodes += 1
@@ -188,8 +201,10 @@ class Pharmacophore(object):
             raise ValueError("Invalid node!")
 
     def remove_node(self, i):
-        """
-        Remove node i.
+        """Remove node from model.
+
+        Args:
+           i (int): node index
         """
         if not isinstance(i, int):
             raise TypeError("Node id must be int!")
@@ -201,8 +216,10 @@ class Pharmacophore(object):
             self.numnodes -= 1
 
     def remove_edge(self, i, j):
-        """
-        Remove edge between nodes i and j.
+        """Remove edge between nodes i and j.
+
+        Args:
+           i, j (int): nodes indices
         """
         if not isinstance(i, int) or not isinstance(j, int):
             raise TypeError("Node indicies must be int!")
@@ -214,8 +231,10 @@ class Pharmacophore(object):
             self.edges[i, j] = self.edges[j, i] = 0.0
 
     def save(self, filename):
-        """
-        Save Pharmacophore to a file using pickle module.
+        """Save Pharmacophore to a file using pickle module.
+
+        Args:
+           filename (str): path to a file
         """
         from pickle import dump
         try:
@@ -225,8 +244,13 @@ class Pharmacophore(object):
 
     @staticmethod
     def read(filename):
-        """
-        Read pickled Pharmacophore from a file.
+        """Read pickled Pharmacophore from a file.
+
+        Args:
+           filename (str): path to a file
+
+        Returns:
+           Pharmacophore: object read from a file
         """
         from pickle import load
         try:

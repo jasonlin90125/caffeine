@@ -3,7 +3,7 @@
 functions for DCAF
 
 Created on Wed Apr  8 09:41:59 2015
-@author: Marta Stepniewska
+by Marta Stepniewska
 """
 
 from dcaf import PHARS, COLORS, Pharmacophore
@@ -16,9 +16,15 @@ from matplotlib.font_manager import FontManager
 
 
 def compare_nodes(n1, n2):
-    """
-    Compare types of two nodes. Return unnormalized similarity score and new
+    """Compare types of two nodes. Return unnormalized similarity score and new
     dictionary of pharmacophoric properties for nodes combination.
+
+    Args:
+       n1, n2 (dict): nodes to compare
+
+    Returns:
+      float: unnormalized similarity score
+      dict: pharmacophoric properties for nodes combination
     """
     if not isinstance(n1, dict):
         raise TypeError("Invalid n1! Expected dict, got %s instead" %
@@ -52,13 +58,18 @@ def compare_nodes(n1, n2):
 
 
 def __POS(p, start):
-    """
-    Compute partial ordering set (POS) for Pharmacophore p beginig from start
-    node. Return list of dictionaries with:
-      idx - position in ordering
-      prev - previous node in graph (not in ordering!)
-      i - node id
-      out_dg - node out-degree
+    """Compute partial ordering set (POS).
+
+    Args:
+       p (Pharmacophore): 
+       start (int): node index to start from
+
+    Returns:
+       list: POS representation, list of dictionaries with:
+          * idx (int): position in ordering
+          * prev (int): previous node in graph (not in ordering!)
+          * i (int): node id
+          * out_dg (float): node out-degree
 
 
     see: Xu, Jun. "GMA: a generic match algorithm for structural homomorphism,
@@ -88,27 +99,26 @@ def __POS(p, start):
 
 def __CBA(p1, p2, start, order, mapping, dist1, dist2, dist_tol, score=None,
           cost=None, map_order=None, idx=None, seen=None):
-    """
-    Run constrained backtracking algorithm (CBA).
+    """Run constrained backtracking algorithm (CBA).
 
-    arguments:
-        p1, p2 - Pharmacophores
-        start - first node to map
-        order - partial ordering set for p1
-        mapping - numpy array describing nodes compatibility
-        dist1, dist2 - distances between nodes
-        dist_tol - distance tolerance
+    Args:
+       p1, p2 (Pharmacophore): models to align
+       start (int): first node to map
+       order (list): partial ordering set for p1
+       mapping (numpy array): array describing nodes compatibility
+       dist1, dist2 (numpy array): distances between nodes
+       dist_tol (float): distance tolerance
 
-        optional (needed for recursive calls):
-            score - current similarity score
-            cost - current edge differences cost
-            map_order - partial ordering set for p2
-            idx - current index
-            seen - list of visited nodes
+       args needed for recursive calls:
+          score (float): current similarity score
+          cost (float): current edge differences cost
+          map_order (list): partial ordering set for p2
+          idx (int)- current index
+          seen (list): visited nodes
 
-    return:
-        res - all common substructure matches (lists of dictionaries
-              complementary to given order)
+    Returns:
+        res (list): all common substructure matches (lists of dictionaries
+          complementary to given order)
 
 
     see: Xu, Jun. "GMA: a generic match algorithm for structural homomorphism,
@@ -203,19 +213,18 @@ def __CBA(p1, p2, start, order, mapping, dist1, dist2, dist_tol, score=None,
 
 
 def __extend(p1, p2, matched, to_check, mapping, dist_tol):
-    """
-    Extend common substructure for given Pharmacophores.
+    """Extend common substructure for given Pharmacophores.
 
-    arguments:
-        p1, p2 - Pharmacophores
-        matched - list of tuples representing already matched nodes
-        to_check - list of lists with nodes to check
-        mapping - numpy array describing nodes compatibility
-        dist_tol - distance tolerance
+    Args:
+       p1, p2 (Pharmacophore): models to align
+       matched (list): tuples representing already matched nodes
+       to_check (list): list of lists with nodes indicies to check
+       mapping (numpy array): array describing nodes compatibility
+       dist_tol (float): distance tolerance
 
-    return:
-        res - list of all common substructure matches (lists of tuples
-              representing matched nodes)
+    Returns:
+       res (list): all common substructure matches (lists of tuples
+         representing matched nodes)
 
     see: Cao, Yiqun, Tao Jiang, and Thomas Girke. "A maximum common
          substructure-based algorithm for searching and predicting drug-like
@@ -278,8 +287,13 @@ def __extend(p1, p2, matched, to_check, mapping, dist_tol):
 
 
 def distances(p):
-    """
-    Compute lengths of shortest paths between all nodes in Pharmacophore p.
+    """Compute lengths of shortest paths between all nodes in Pharmacophore.
+
+    Args:
+       p (Pharmacophore): model to analyse
+
+    Returns:
+       dist (numpy array): array with distances between all nodes
     """
 
     if not isinstance(p, Pharmacophore):
@@ -314,17 +328,17 @@ def distances(p):
 
 
 def dfs(p, n, to_check=None, visited=None):
-    """
-    Perform depth-first search.
+    """Perform depth-first search.
 
-    arguments:
-        p - Pharmacophore object
-        n - id of starting node
-        to_check - set of indicies of nodes do check (optional)
-        visited - list of indicies of already visited nodes (optional)
+    Args:
+       p (Pharmacophore): model to search
+       n (int): id of first node
+       to_check (set, optional): indicies of nodes do check
+       visited (list, optional): list of indicies of already visited nodes; if
+       given it will be updated
 
-    return:
-        visited - all nodes reachable from n
+    Returns:
+       visited (list): all nodes reachable from n
     """
     if not isinstance(p, Pharmacophore):
         raise TypeError("Expected Pharmacophore, got %s instead" %
@@ -370,9 +384,16 @@ def dfs(p, n, to_check=None, visited=None):
 
 
 def split_components(p, nodes=None):
-    """
-    Find all connected components in given Pharmacophore. If list of nodes is
-    given, find components in subgraph induced by those nodes.
+    """Find all connected components in given Pharmacophore.
+    
+    Args:
+       p (Pharmacophore): model to analse
+       nodes (list, optional): list of nodes indicies; if given, find
+         components in subgraph induced by those nodes.
+
+    Returns:
+       list: nodes indicies grouped into connected components, sorted by
+         component size
     """
     if not isinstance(p, Pharmacophore):
         raise TypeError("Expected Pharmacophore, got %s instead" %
@@ -406,11 +427,15 @@ def split_components(p, nodes=None):
 
 
 def __components(phars, pairs):
-    """
-    Find all connected components in common substructure of two Pharmacophores.
-    arguments:
-        phars - tuple or list with two Pharmacophores
-        pairs - list of pairs of corresponding nodes
+    """Find all connected components in common substructure of two Pharmacophores.
+
+    Arguments:
+       phars (tuple): two Pharmacophores
+       pairs (list): list of pairs of corresponding nodes
+
+    Returns:
+       list: nodes indicies grouped into connected components, sorted by
+         component size
     """
     p1, p2 = phars
     nodes1 = [i[0] for i in pairs]
@@ -437,15 +462,17 @@ def __components(phars, pairs):
         return sorted(partition.values(), key=len)
 
 
-def map_pharmacophores(p1, p2, dist_tol=1):
-    """
-    Find best common substructure match for two Pharmacophores p1 and p2,
-    accepting distance differences below dist_tol treshold.
+def map_pharmacophores(p1, p2, dist_tol=1.0):
+    """Find best common substructure match for two Pharmacophores.
 
-    return:
-        score - unnormalized similarity score
-        cost - edge length differences cost
-        best_subgraph - lists of tuples representing matched nodes
+    Args:
+       p1, p2 (pharmacophore): models to align
+       dist_tol (float, optional): accep distance differences below this treshold
+
+    Returns:
+        score (float): unnormalized similarity score
+        cost (float): edge length differences cost
+        best_subgraph (lists): tuples representing matched nodes
     """
     if not isinstance(p1, Pharmacophore):
         raise TypeError("Expected Pharmacophore, got %s instead" %
@@ -517,9 +544,7 @@ def map_pharmacophores(p1, p2, dist_tol=1):
             return score
 
     def update_score(matched, s=None, c=None):
-        """
-        remember all subgraphs with highest difference between score and cost
-        """
+        """remember all subgraphs with highest difference between score and cost"""
         #TODO penalty for breaking rings?
         matched.sort()
 
@@ -629,10 +654,16 @@ def map_pharmacophores(p1, p2, dist_tol=1):
 
 
 def similarity(p1, p2, dist_tol=1):
-    """
-    Find common part of two Pharmacophores, calculate normalized similarity
-    score and edge length differences cost. Accept distance differences below
-    dist_tol treshold.
+    """Find common part of two Pharmacophores, calculate normalized similarity
+    score and edge length differences cost.
+    
+    Args:
+       p1, p2 (pharmacophore): models to align
+       dist_tol (float, optional): accep distance differences below this treshold
+
+    Returns:
+        score (float): normalized similarity score (value between 0 and 1)
+        cost (float): edge length differences cost     
     """
     if not isinstance(p1, Pharmacophore):
         raise TypeError("Expected Pharmacophore, got %s instead" %
@@ -659,12 +690,20 @@ def similarity(p1, p2, dist_tol=1):
     return (score / (a1 + a2)), cost
 
 
-def combine_pharmacophores(p1, p2, dist_tol=1, freq_cutoff=0.0):
-    """
-    Create new model from common part of Pharmacophores p1 and p2, add unique
-    elements and calculate new frequencies and distances. Alow distance
-    differences below dist_tol treshold. Skip unique nodes with frequencies
-    above freq_cutoff treshold.
+def combine_pharmacophores(p1, p2, dist_tol=1.0, freq_cutoff=0.0):
+    """Create new model from Pharmacophores p1 and p2
+
+    Find common part of two Pharmacophores, add unique elements and calculate
+      new frequencies and distances.
+
+    Args:
+      p1, p2 (Pharmacophore): models to combine
+      dist_tol (float, optional): accep distance differences below this treshold
+      freq_cutoff (float, optional): skip unique nodes with frequencies below
+        this treshold
+
+    Returns:
+       Pharmacophore: combination of p1 and p2
     """
     if not isinstance(p1, Pharmacophore):
         raise TypeError("Expected Pharmacophore, got %s instead" %
@@ -754,15 +793,17 @@ def combine_pharmacophores(p1, p2, dist_tol=1, freq_cutoff=0.0):
 
 
 def filter_nodes(p, freq_range=(0.0, 1.0), rm_outside=True):
-    """
-    Create new model without nodes that does not fulfill given frequency
+    """Create new model without nodes that does not fulfill given frequency
     criteria.
 
-    arguments:
-        p - Pharmacophore
-        freq_range - frequence range for filtering
-        rm_outside - remove nodes with frequencies outside given range; if
-                     False remove nodes with frequencies inside range
+    Args:
+       p (Pharmacophore): model to filter
+       freq_range (tuple, optional) - two floats, frequence range for filtering
+       rm_outside (bool, optional): if True remove nodes with frequencies
+         outside given range; remove nodes with frequencies inside range otherwise
+
+    Returns:
+       Pharmacohpre: new model
     """
 
     if not isinstance(p, Pharmacophore):
@@ -804,15 +845,18 @@ def filter_nodes(p, freq_range=(0.0, 1.0), rm_outside=True):
 
 
 def spring_layout(p, c0=0.2, c1=1.0):
-    """
-    Calculate points positions for Pharmacophore depiction using spring layout.
-    arguments:
-        p - Pharmacophore
-        c0, c1 - coefficients for spring and repulsive forces
+    """Calculate points positions for Pharmacophore depiction using spring layout.
+
+    Args:
+       p (Pharmacophore): model to depict
+       c0, c1 (float, optional): coefficients for spring and repulsive forces
+
+    Returns:
+       numpy array: 2D array with nodes positions
     """
     if not isinstance(p, Pharmacophore):
         raise TypeError("Expected Pharmacophore, got %s instead" %
-                        type(p).__name__)    
+                        type(p).__name__)
 
     if not ((isinstance(c0, float) or isinstance(c0, int)) and
             (isinstance(c1, float) or isinstance(c1, int))):
@@ -845,11 +889,19 @@ def spring_layout(p, c0=0.2, c1=1.0):
 
 
 def draw(p, layout="rd"):
-    """
-    Draw Pharmacophore using RDKit ("rd"), OpenBabel ("ob") or spring
+    """Draw Pharmacophore using RDKit ("rd"), OpenBabel ("ob") or spring
     layout ("spring") to calculate nodes positions.
 
     We recommend to use RDKit ("rd"), as it generates the clearest layouts.
+    
+    Args:
+       p (Pharmacophore): model to depict
+       layout (str, optional): layout name
+
+    Returns:
+       tuple:
+         * matplotlib Figure
+         * matplotlib axis
     """
     if not isinstance(p, Pharmacophore):
         raise TypeError("Expected Pharmacophore, got %s instead" %
