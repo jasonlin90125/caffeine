@@ -46,6 +46,15 @@ There are also three demo scripts, showing prossible applications of DCAF:
 * matplotlib (for pharmacophore drawing)
 * scipy (for spring layout)
 
+### Documentation
+Automatic documentation for DCAF can be build with Sphinx (http://sphinx-doc.org/)
+
+```
+cd docs
+make html
+make latexpdf
+```
+
 
 ## Contact ##
 
