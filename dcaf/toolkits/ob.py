@@ -95,7 +95,7 @@ def layout(p):
 
     positions = np.zeros((p.numnodes, 2))
     m = pybel.Molecule(ob.OBMol())
-    for i in xrange(p.numnodes - 1):
+    for i in xrange(p.numnodes):
         m.OBMol.NewAtom()
     idx = p.numnodes + 1
     for i in xrange(p.numnodes):
