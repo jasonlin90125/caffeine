@@ -56,7 +56,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'DeCAF'
-copyright = u'2015, Marta Stepniewska'
+copyright = u'2015, Marta M. Stepniewska'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -209,7 +209,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
   ('index', 'DeCAF.tex', u'DeCAF Documentation',
-   u'Marta Stepniewska', 'manual'),
+   u'Marta M. Stepniewska', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -239,7 +239,7 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'dcaf', u'DeCAF Documentation',
-     [u'Marta Stepniewska'], 1)
+     [u'Marta M. Stepniewska'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -253,7 +253,8 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('index', 'DeCAF', u'DeCAF Documentation',
-   u'Marta Stepniewska', 'DeCAF', 'One line description of project.',
+   u'Marta M. Stepniewska', 'DeCAF',
+   'Discrimination, Comparison, Alignment tool for small molecules',
    'Miscellaneous'),
 ]
 
@@ -274,3 +275,4 @@ texinfo_documents = [
 intersphinx_mapping = {}
 intersphinx_mapping['numpy'] = ('http://docs.scipy.org/doc/numpy/', None)
 intersphinx_mapping['scipy'] = ('http://docs.scipy.org/doc/scipy/reference/', None)
+intersphinx_mapping['matplotlib'] = ('http://matplotlib.org/api/', None)

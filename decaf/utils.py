@@ -16,14 +16,14 @@ from matplotlib.font_manager import FontManager
 
 
 def compare_nodes(n1, n2):
-    """Compare types of two nodes. Return unnormalized similarity score and new
+    """Compare types of two nodes. Return unnormalised similarity score and new
     dictionary of pharmacophoric properties for nodes combination.
 
     Args:
        n1, n2 (dict): nodes to compare
 
     Returns:
-      float: unnormalized similarity score
+      float: unnormalised similarity score
       dict: pharmacophoric properties for nodes combination
     """
     if not isinstance(n1, dict):
@@ -333,7 +333,7 @@ def dfs(p, n, to_check=None, visited=None):
     Args:
        p (Pharmacophore): model to search
        n (int): id of first node
-       to_check (set, optional): indicies of nodes do check
+       to_check (set, optional): indices of nodes do check
        visited (list, optional): list of indicies of already visited nodes; if
        given it will be updated
 
@@ -387,12 +387,12 @@ def split_components(p, nodes=None):
     """Find all connected components in given Pharmacophore.
     
     Args:
-       p (Pharmacophore): model to analse
-       nodes (list, optional): list of nodes indicies; if given, find
+       p (Pharmacophore): model to analyse
+       nodes (list, optional): list of nodes indices; if given, find
          components in subgraph induced by those nodes.
 
     Returns:
-       list: nodes indicies grouped into connected components, sorted by
+       list: nodes indices grouped into connected components, sorted by
          component size
     """
     if not isinstance(p, Pharmacophore):
@@ -467,10 +467,10 @@ def map_pharmacophores(p1, p2, dist_tol=1.0):
 
     Args:
        p1, p2 (pharmacophore): models to align
-       dist_tol (float, optional): accep distance differences below this treshold
+       dist_tol (float, optional): accept distance differences below this threshold
 
     Returns:
-        score (float): unnormalized similarity score
+        score (float): unnormalised similarity score
         cost (float): edge length differences cost
         best_subgraph (lists): tuples representing matched nodes
     """
@@ -659,7 +659,7 @@ def similarity(p1, p2, dist_tol=1):
     
     Args:
        p1, p2 (pharmacophore): models to align
-       dist_tol (float, optional): accep distance differences below this treshold
+       dist_tol (float, optional): accept distance differences below this threshold
 
     Returns:
         score (float): normalized similarity score (value between 0 and 1)
@@ -698,9 +698,9 @@ def combine_pharmacophores(p1, p2, dist_tol=1.0, freq_cutoff=0.0):
 
     Args:
       p1, p2 (Pharmacophore): models to combine
-      dist_tol (float, optional): accep distance differences below this treshold
+      dist_tol (float, optional): accept distance differences below this threshold
       freq_cutoff (float, optional): skip unique nodes with frequencies below
-        this treshold
+        this threshold
 
     Returns:
        Pharmacophore: combination of p1 and p2
@@ -915,14 +915,14 @@ def draw(p, layout="rd"):
             from decaf.toolkits.rd import layout
             pos = layout(p)
         except Exception as e:
-            raise ImportError("Cannot use rd layout!", e)
+            raise ImportError('Cannot use "rd" layout! Use "ob" or "spring" instead', e)
 
     elif layout == "ob":
         try:
             from decaf.toolkits.ob import layout
             pos = layout(p)
         except Exception as e:
-            raise ImportError("Cannot use ob layout!", e)
+            raise ImportError('Cannot use "ob" layout! Use "rd" or "spring" instead', e)
 
     elif layout == "spring":
         try:

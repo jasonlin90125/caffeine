@@ -42,7 +42,7 @@ class Pharmacophore(object):
                 {"label": 1, "freq": 2.0, "type": {"HH": 2.0}}]
 
        edges (numpy array): symmetrical array with zeros at diagonal, where
-         edges[i, j] is edge lenght, expressed in number of bonds in
+         edges[i, j] is edge length, expressed in number of bonds in
          molecule (0.0 means that i and j are not connected)
 
         molecules (float): number of molecules used to create model
@@ -50,7 +50,7 @@ class Pharmacophore(object):
         title (str): pharmacophore description
         
     Example:
-       Pharmacophore created manualy from C2H5NH2 and N(C2H5)3 molecules:
+       Pharmacophore created manually from C2H5NH2 and N(C2H5)3 molecules:
 
        >>> nodes = [{"label": "N", "freq": 2.0, "type": {"HA": 2.0, "HD": 1.0}},
        ... {"label": "CH3", "freq": 2.0, "type": {"HH": 2.0}}]
@@ -156,7 +156,7 @@ class Pharmacophore(object):
             return False
 
     def copy(self):
-        """Generarte deep copy of a Pharmacophore."""
+        """Generate deep copy of a Pharmacophore."""
         from copy import deepcopy
         return deepcopy(self)
 

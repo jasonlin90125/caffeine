@@ -60,4 +60,4 @@ make latexpdf
 
 Please contact us with comments, suggestions, questions or bug reports:
 
-* Marta Stepniewska ( martasd[at]ibb.waw.pl )
+* Marta M. Stepniewska ( martasd[at]ibb.waw.pl )
