@@ -16,7 +16,7 @@ from time import sleep
 import sys
 
 
-ligands = [mol for mol in readfile("smi", "demo/test.ism")]
+ligands = [mol for mol in readfile("smi", "test.ism")]
 num_mols = len(ligands)
 phars = [phar_from_mol(mol) for mol in ligands]
 dist = np.zeros((num_mols*(num_mols - 1.0)/2.0))

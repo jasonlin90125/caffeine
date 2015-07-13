@@ -18,8 +18,8 @@ NUM_PROCESSES = cpu_count()
 cutoff = 0.8
 
 
-database = readfile("smi", "demo/all.ism")
-model = Pharmacophore.read("demo/model.p")
+database = readfile("smi", "all.ism")
+model = Pharmacophore.read("model.p")
 
 print "Read model with %s nodes created from %s molecules." % (model.numnodes,
                                                                model.molecules)

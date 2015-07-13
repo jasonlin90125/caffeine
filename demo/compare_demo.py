@@ -13,9 +13,9 @@ from multiprocessing import Pool
 from time import sleep
 
 
-ref = [mol for mol in readfile("smi", "demo/ref.ism")]
-act = [mol for mol in readfile("smi", "demo/actives.ism")]
-inact = [mol for mol in readfile("smi", "demo/inactives.ism")]
+ref = [mol for mol in readfile("smi", "ref.ism")]
+act = [mol for mol in readfile("smi", "actives.ism")]
+inact = [mol for mol in readfile("smi", "inactives.ism")]
 
 prefix = "demo/compare-demo"
 
