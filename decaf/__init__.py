@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-DCAF (decaf) - Discrimination, Comparison, Alignment tool for small molecules.
+DeCAF - Discrimination, Comparison, Alignment tool for small molecules.
 
 Created on Tue Feb 10 15:51:16 2015
 by Marta Stepniewska

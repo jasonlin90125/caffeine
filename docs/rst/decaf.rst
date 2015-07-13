@@ -1,11 +1,11 @@
-dcaf package
+decaf package
 ============
 
 
 Module contents
 ---------------
 
-.. automodule:: dcaf
+.. automodule:: decaf
     :members:
     :undoc-members:
     :show-inheritance:
@@ -16,16 +16,16 @@ Subpackages
 
 .. toctree::
 
-    dcaf.toolkits
+    decaf.toolkits
 
 
 Submodules
 ----------
 
-dcaf.utils module
+decaf.utils module
 ^^^^^^^^^^^^^^^^^
 
-.. automodule:: dcaf.utils
+.. automodule:: decaf.utils
     :members:
     :undoc-members:
     :show-inheritance:

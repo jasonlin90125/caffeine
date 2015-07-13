@@ -1,7 +1,7 @@
-oddt
+DeCAF
 ====
 
 .. toctree::
    :maxdepth: 4
 
-   dcaf
+   decaf

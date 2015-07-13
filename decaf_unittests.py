@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Unit tests for DCAF module
+Unit tests for DeCAF module
 
 Created on Thu Apr  2 15:57:49 2015
 @author: Marta Stepniewska
@@ -12,7 +12,7 @@ import numpy as np
 class PharmacophoreTests(unittest.TestCase):
 
     def setUp(self):
-        from dcaf import Pharmacophore
+        from decaf import Pharmacophore
         nodes = [{"label": 0, "freq": 2.0, "type": {"HH": 2.0, "AR": 2.0}},
                  {"label": 1, "freq": 2.0, "type": {"HH": 2.0, "AR": 2.0}},
                  {"label": 2, "freq": 2.0, "type": {"HH": 2.0, "AR": 2.0}},
@@ -109,7 +109,7 @@ class PharmacophoreTests(unittest.TestCase):
                     self.setUp()
 
     def testSaveRead(self):
-        from dcaf import Pharmacophore
+        from decaf import Pharmacophore
         from os import remove
         filename = "test.p"
         self.phar.save(filename)
@@ -125,7 +125,7 @@ class PharmacophoreTests(unittest.TestCase):
         remove(filename)
 
     def testValidation(self):
-        from dcaf import Pharmacophore
+        from decaf import Pharmacophore
 
         self.assertRaises(TypeError, Pharmacophore, "a", self.phar.edges)
         self.assertRaises(TypeError, Pharmacophore, self.phar.nodes, "a")
@@ -176,7 +176,7 @@ class ToolkitsTests(unittest.TestCase):
 
     def testCreateOb(self):
         from pybel import readstring
-        import dcaf.toolkits.ob as ob
+        import decaf.toolkits.ob as ob
         mol = readstring("smi", self.string)
         phar = ob.phar_from_mol(mol)
         self.assertEqual(phar.numnodes, self.numnodes)
@@ -189,7 +189,7 @@ class ToolkitsTests(unittest.TestCase):
         self.assertEqual(types, self.types)
 
     def testValidationOb(self):
-        import dcaf.toolkits.ob as ob
+        import decaf.toolkits.ob as ob
         self.assertRaises(TypeError, ob.phar_from_mol, "c1ccccc1")
         self.assertRaises(TypeError, ob.phar_from_mol, 2)
         self.assertRaises(TypeError, ob.layout, "c1ccccc1")
@@ -197,7 +197,7 @@ class ToolkitsTests(unittest.TestCase):
 
     def testCreateRd(self):
         from rdkit.Chem import MolFromSmiles
-        import dcaf.toolkits.rd as rd
+        import decaf.toolkits.rd as rd
         molstring, name = self.string.split()
         mol = MolFromSmiles(molstring)
         mol.SetProp("_Name", name)
@@ -212,7 +212,7 @@ class ToolkitsTests(unittest.TestCase):
         self.assertEqual(types, self.types)
 
     def testValidationRd(self):
-        import dcaf.toolkits.rd as rd
+        import decaf.toolkits.rd as rd
         self.assertRaises(TypeError, rd.phar_from_mol, "c1ccccc1")
         self.assertRaises(TypeError, rd.phar_from_mol, 2)
         self.assertRaises(TypeError, rd.layout, "c1ccccc1")
@@ -223,7 +223,7 @@ class UtilsTests(unittest.TestCase):
 
     def setUp(self):
         from pybel import readstring
-        import dcaf.toolkits.ob as ob
+        import decaf.toolkits.ob as ob
 
         self.smiles = ["Cc1c(N)cccc1C(=O)N2CCCC2",
                        "Cc1c(NCCCCC(=O)O)cccc1C(=O)N2CCCC2",
@@ -236,7 +236,7 @@ class UtilsTests(unittest.TestCase):
         self.phars = None
 
     def testCompareNodes(self):
-        from dcaf.utils import compare_nodes
+        from decaf.utils import compare_nodes
 
         max_sim = self.phars[0].molecules * 2.0
         for n1 in xrange(self.phars[0].numnodes):
@@ -255,7 +255,7 @@ class UtilsTests(unittest.TestCase):
                         self.assertEqual(s, max_sim)
 
     def testDistances(self):
-        from dcaf.utils import distances
+        from decaf.utils import distances
 
         for p in self.phars:
             dist = distances(p)
@@ -266,7 +266,7 @@ class UtilsTests(unittest.TestCase):
             self.assertFalse((dist <= 0).any())
 
     def testDfs(self):
-        from dcaf.utils import dfs
+        from decaf.utils import dfs
 
         for p in self.phars:
             for i in xrange(p.numnodes):
@@ -274,7 +274,7 @@ class UtilsTests(unittest.TestCase):
                 self.assertEqual(len(visited), p.numnodes)
 
     def testSplitComponents(self):
-        from dcaf.utils import split_components
+        from decaf.utils import split_components
 
         for p in self.phars:
             for i in xrange(p.numnodes):
@@ -282,7 +282,7 @@ class UtilsTests(unittest.TestCase):
                 self.assertLessEqual(len(comps), 2)
 
     def testMap(self):
-        from dcaf.utils import map_pharmacophores
+        from decaf.utils import map_pharmacophores
 
         scores = [[0]*len(self.phars) for i in xrange(len(self.phars))]
         costs = [[0]*len(self.phars) for i in xrange(len(self.phars))]
@@ -308,8 +308,8 @@ class UtilsTests(unittest.TestCase):
 
     def testSame(self):
         from rdkit.Chem import MolFromSmiles
-        import dcaf.toolkits.rd as rd
-        from dcaf.utils import similarity
+        import decaf.toolkits.rd as rd
+        from decaf.utils import similarity
 
         phars2 = [rd.phar_from_mol(MolFromSmiles(s)) for s in
                   self.smiles]
@@ -319,7 +319,7 @@ class UtilsTests(unittest.TestCase):
             self.assertEqual(cost, 0.0)
 
     def testCombine(self):
-        from dcaf.utils import map_pharmacophores, combine_pharmacophores
+        from decaf.utils import map_pharmacophores, combine_pharmacophores
 
         expected = [[0]*len(self.phars) for i in xrange(len(self.phars))]
         real = [[0]*len(self.phars) for i in xrange(len(self.phars))]
@@ -338,7 +338,7 @@ class UtilsTests(unittest.TestCase):
                 self.assertEqual(real[i][j], real[j][i])
 
     def testModel(self):
-        from dcaf.utils import combine_pharmacophores as cp
+        from decaf.utils import combine_pharmacophores as cp
 
         cutoff = 0.5
         model0 = cp(self.phars[0], self.phars[0])
@@ -353,7 +353,7 @@ class UtilsTests(unittest.TestCase):
             self.assertGreaterEqual(node["freq"], freq*cutoff)
 
     def testFilter(self):
-        from dcaf.utils import combine_pharmacophores as cp, filter_nodes
+        from decaf.utils import combine_pharmacophores as cp, filter_nodes
 
         cutoff = 0.5
         model0 = cp(self.phars[0], self.phars[0])
@@ -365,7 +365,7 @@ class UtilsTests(unittest.TestCase):
             self.assertGreaterEqual(node["freq"], freq*cutoff)
 
     def testValidation(self):
-        from dcaf.utils import compare_nodes, distances, dfs, filter_nodes, \
+        from decaf.utils import compare_nodes, distances, dfs, filter_nodes, \
             map_pharmacophores as mp, similarity, split_components, \
             combine_pharmacophores as cp
 

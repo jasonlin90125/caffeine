@@ -1,10 +1,10 @@
 # README #
 
-## DCAF - Discrimination, Comparison, Alignment tool for small molecules ##
+## DeCAF - Discrimination, Comparison, Alignment tool for small molecules ##
 
-DCAF is a method for describing molecules' pharmacophoric properties and a fast and efective tool for comparing and combining ligands.
+DeCAF is a method for describing molecules' pharmacophoric properties and a fast and efective tool for comparing and combining ligands.
 
-DCAF is written as a Python module and can be easily combined with OpenBabel, RDKit and other chemoinformatic tools.
+DeCAF is written as a Python module and can be easily combined with OpenBabel, RDKit and other chemoinformatic tools.
 
 
 ## Examples ##
@@ -15,8 +15,8 @@ DCAF is written as a Python module and can be easily combined with OpenBabel, RD
 
 #use RDKit
 from rdkit.Chem import MolFromSmiles
-from dcaf.toolkits import rd
-from dcaf.utils import similarity, combine_pharmacophores, draw
+from decaf.toolkits import rd
+from decaf.utils import similarity, combine_pharmacophores, draw
 
 #create models
 mol1 = MolFromSmiles("c1cc(cc(c1)N)c1cc(cc(c1O)c1[nH]c2ccc(cc2n1)C(=N)N)Cl")
@@ -33,7 +33,7 @@ draw(phar)
 ```
 
 ### Demos ###
-There are also three demo scripts, showing prossible applications of DCAF:
+There are also three demo scripts, showing prossible applications of DeCAF:
 
 * compare_demo.py - compare two sets of ligands to refrence set
 * filter_demo.py - screen database for molecules similar to given pharmacophore model
@@ -47,7 +47,7 @@ There are also three demo scripts, showing prossible applications of DCAF:
 * scipy (for spring layout)
 
 ### Documentation
-Automatic documentation for DCAF can be build with Sphinx (http://sphinx-doc.org/)
+Automatic documentation for DeCAF can be build with Sphinx (http://sphinx-doc.org/)
 
 ```
 cd docs

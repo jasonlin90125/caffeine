@@ -55,7 +55,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'DCAF'
+project = u'DeCAF'
 copyright = u'2015, Marta Stepniewska'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -208,7 +208,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'DCAF.tex', u'DCAF Documentation',
+  ('index', 'DeCAF.tex', u'DeCAF Documentation',
    u'Marta Stepniewska', 'manual'),
 ]
 
@@ -238,7 +238,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'dcaf', u'DCAF Documentation',
+    ('index', 'dcaf', u'DeCAF Documentation',
      [u'Marta Stepniewska'], 1)
 ]
 
@@ -252,8 +252,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'DCAF', u'DCAF Documentation',
-   u'Marta Stepniewska', 'DCAF', 'One line description of project.',
+  ('index', 'DeCAF', u'DeCAF Documentation',
+   u'Marta Stepniewska', 'DeCAF', 'One line description of project.',
    'Miscellaneous'),
 ]
 

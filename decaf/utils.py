@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-functions for DCAF
+functions for DeCAF
 
 Created on Wed Apr  8 09:41:59 2015
 by Marta Stepniewska
 """
 
-from dcaf import PHARS, COLORS, Pharmacophore
+from decaf import PHARS, COLORS, Pharmacophore
 from collections import deque
 import numpy as np
 import math
@@ -912,14 +912,14 @@ def draw(p, layout="rd"):
                         type(layout).__name__)
     if layout == "rd":
         try:
-            from dcaf.toolkits.rd import layout
+            from decaf.toolkits.rd import layout
             pos = layout(p)
         except Exception as e:
             raise ImportError("Cannot use rd layout!", e)
 
     elif layout == "ob":
         try:
-            from dcaf.toolkits.ob import layout
+            from decaf.toolkits.ob import layout
             pos = layout(p)
         except Exception as e:
             raise ImportError("Cannot use ob layout!", e)

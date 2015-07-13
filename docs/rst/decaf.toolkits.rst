@@ -1,10 +1,10 @@
-dcaf.toolkits package
+decaf.toolkits package
 =====================
 
 Module contents
 ---------------
 
-.. automodule:: dcaf.toolkits
+.. automodule:: decaf.toolkits
     :members:
     :undoc-members:
     :show-inheritance:
@@ -12,18 +12,18 @@ Module contents
 Submodules
 ----------
 
-dcaf.toolkits.ob module
+decaf.toolkits.ob module
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: dcaf.toolkits.ob
+.. automodule:: decaf.toolkits.ob
     :members:
     :undoc-members:
     :show-inheritance:
 
-dcaf.toolkits.rd module
+decaf.toolkits.rd module
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: dcaf.toolkits.rd
+.. automodule:: decaf.toolkits.rd
     :members:
     :undoc-members:
     :show-inheritance:
