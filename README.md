@@ -41,12 +41,11 @@ There are also three demo scripts, showing prossible applications of DeCAF:
 
 ## Requirements ##
 * numpy (for basic functionalities)
-
 * Pybel (OpenBabel) and/or RDKit (for creating models from molecules)
 * matplotlib (for pharmacophore drawing)
 * scipy (for spring layout)
 
-### Documentation
+## Documentation ##
 Automatic documentation for DeCAF can be build with Sphinx (http://sphinx-doc.org/)
 
 ```
@@ -55,6 +54,17 @@ make html
 make latexpdf
 ```
 
+## Installation ##
+After installing OpenBabel or RDKit, you can install DeCAF with setuptools:
+```
+python setup.py install
+```
+
+...or use pip:
+
+```
+pip install decaf
+```
 
 ## Contact ##
 
