@@ -7,8 +7,8 @@ Created on Mon Mar 16 10:11:53 2015
 """
 
 from pybel import readfile
-from dcaf.toolkits.ob import phar_from_mol
-from dcaf.utils import similarity, combine_pharmacophores
+from decaf.toolkits.ob import phar_from_mol
+from decaf.utils import similarity, combine_pharmacophores
 import numpy as np
 from multiprocessing import Pool, Manager
 from scipy.cluster.hierarchy import average as upgma

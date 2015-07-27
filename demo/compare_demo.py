@@ -7,8 +7,8 @@ Created on Mon Mar 16 10:11:56 2015
 """
 
 from pybel import readfile
-from dcaf.toolkits.ob import phar_from_mol
-from dcaf.utils import similarity
+from decaf.toolkits.ob import phar_from_mol
+from decaf.utils import similarity
 from multiprocessing import Pool
 from time import sleep
 
