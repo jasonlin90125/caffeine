@@ -13,12 +13,12 @@ class PharmacophoreTests(unittest.TestCase):
 
     def setUp(self):
         from decaf import Pharmacophore
-        nodes = [{"label": 0, "freq": 2.0, "type": {"HH": 2.0, "AR": 2.0}},
-                 {"label": 1, "freq": 2.0, "type": {"HH": 2.0, "AR": 2.0}},
-                 {"label": 2, "freq": 2.0, "type": {"HH": 2.0, "AR": 2.0}},
-                 {"label": 3, "freq": 2.0, "type": {"HH": 2.0, "AR": 2.0}},
-                 {"label": 4, "freq": 2.0, "type": {"HH": 2.0, "AR": 2.0}},
-                 {"label": 5, "freq": 2.0, "type": {"AR": 2.0}},
+        nodes = [{"label": 0, "freq": 2.0, "type": {"HH": 2.0, "AR": 2.0, "R": 2.0}},
+                 {"label": 1, "freq": 2.0, "type": {"HH": 2.0, "AR": 2.0, "R": 2.0}},
+                 {"label": 2, "freq": 2.0, "type": {"HH": 2.0, "AR": 2.0, "R": 2.0}},
+                 {"label": 3, "freq": 2.0, "type": {"HH": 2.0, "AR": 2.0, "R": 2.0}},
+                 {"label": 4, "freq": 2.0, "type": {"HH": 2.0, "AR": 2.0, "R": 2.0}},
+                 {"label": 5, "freq": 2.0, "type": {"AR": 2.0, "R": 2.0}},
                  {"label": 6, "freq": 2.0, "type": {"HA": 2.0}},
                  {"label": 7, "freq": 2.0, "type": {"HH": 2.0}},
                  {"label": 8, "freq": 1.0, "type": {"HA": 1.0, "HD": 1.0}},
@@ -172,7 +172,7 @@ class ToolkitsTests(unittest.TestCase):
         self.string = "Nc1ccc(C(O)O)cc1	mol1"
         self.numnodes = 9
         self.numedges = 10
-        self.types = {"AR": 6, "HH": 5, "HA": 3, "HD": 3}
+        self.types = {"AR": 6, "HH": 5, "HA": 3, "HD": 3, "R": 6}
 
     def testCreateOb(self):
         from pybel import readstring
@@ -182,7 +182,7 @@ class ToolkitsTests(unittest.TestCase):
         self.assertEqual(phar.numnodes, self.numnodes)
         self.assertEqual(np.sum(phar.edges > 0) / 2.0, self.numedges)
 
-        types = {"AR": 0, "HH": 0, "HA": 0, "HD": 0}
+        types = {t: 0 for t in self.types}
         for i in xrange(phar.numnodes):
             for t in phar.nodes[i]["type"].keys():
                 types[t] += 1
@@ -205,7 +205,7 @@ class ToolkitsTests(unittest.TestCase):
         self.assertEqual(phar.numnodes, self.numnodes)
         self.assertEqual(np.sum(phar.edges > 0) / 2.0, self.numedges)
 
-        types = {"AR": 0, "HH": 0, "HA": 0, "HD": 0}
+        types = {t: 0 for t in self.types}
         for i in xrange(phar.numnodes):
             for t in phar.nodes[i]["type"].keys():
                 types[t] += 1
@@ -289,10 +289,12 @@ class UtilsTests(unittest.TestCase):
         best_mapped = [[0]*len(self.phars) for i in xrange(len(self.phars))]
         for i in xrange(len(self.phars)):
             for j in xrange(len(self.phars)):
-                s, c, b = map_pharmacophores(self.phars[i], self.phars[j])
+                s, c, m = map_pharmacophores(self.phars[i], self.phars[j],
+                                             coarse_grained=False)
                 scores[i][j] = s
                 costs[i][j] = c
-                best_mapped[i][j] = len(b)
+                self.assertEqual(len(m[0]), len(m[1]))
+                best_mapped[i][j] = len(m[0])
 
         for i in xrange(len(self.phars)):
             self.assertEqual(best_mapped[i][i], self.phars[i].numnodes)
@@ -326,8 +328,9 @@ class UtilsTests(unittest.TestCase):
 
         for i in xrange(len(self.phars)):
             for j in xrange(len(self.phars)):
-                _, _, b = map_pharmacophores(self.phars[i], self.phars[j])
-                expected[i][j] = self.phars[i].numnodes+self.phars[j].numnodes-len(b)
+                _, _, m = map_pharmacophores(self.phars[i], self.phars[j],
+                                             coarse_grained=False)
+                expected[i][j] = self.phars[i].numnodes+self.phars[j].numnodes-len(m[0])
                 tmp = combine_pharmacophores(self.phars[i], self.phars[j])
                 real[i][j] = tmp.numnodes
 
