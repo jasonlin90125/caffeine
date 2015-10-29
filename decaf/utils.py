@@ -885,6 +885,55 @@ def combine_pharmacophores(p1, p2, dist_tol=0.0, freq_cutoff=0.0):
     return new_p
 
 
+def inclusive_similarity(p1, p2, dist_tol=0.0, coarse_grained=True):
+    """Find common part of two Pharmacophores and calculate what fractions of
+    both models it contains. E.g. if p1 is a substructure of p2, function will
+    return (1.0, s, c), where s<=1 and c>=0.
+
+    Args:
+       p1, p2 (pharmacophore): models to align
+       dist_tol (float, optional): accept distance differences below this
+         threshold
+       coarse_grained (bool, optional): if True, find alignment for compressed
+         ring systems. Otherwise align ring members afer finding coarse-grained
+         alignment.
+
+
+    Returns:
+        float: normalized similarity score for p1
+        float: normalized similarity score for p2
+        float: edge length differences cost
+    """
+    if not isinstance(p1, Pharmacophore):
+        raise TypeError("Expected Pharmacophore, got %s instead" %
+                        type(p1).__name__)
+
+    if not isinstance(p2, Pharmacophore):
+        raise TypeError("Expected Pharmacophore, got %s instead" %
+                        type(p2).__name__)
+
+    if not isinstance(dist_tol, int) and not isinstance(dist_tol, float):
+        raise TypeError("dist_tol must be float or int!")
+
+    if dist_tol < 0:
+        raise ValueError("dist_tol must be greater than or equal 0")
+
+    if not isinstance(coarse_grained, bool):
+        raise TypeError("coarse_grained must be bool!")
+
+    score, cost, _ = map_pharmacophores(p1, p2, dist_tol, coarse_grained)
+    a1 = 0.0
+    a2 = 0.0
+    m1 = p1.molecules
+    m2 = p2.molecules
+    m = m1 + m2
+    for n in p1.nodes:
+        a1 += n["freq"]
+    for n in p2.nodes:
+        a2 += n["freq"]
+    return score * (m1 / m) / a1, score * (m2 / m) / a2, cost
+
+
 def filter_nodes(p, freq_range=(0.0, 1.0), rm_outside=True):
     """Create new model without nodes that does not fulfill given frequency
     criteria.

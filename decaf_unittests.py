@@ -340,6 +340,13 @@ class UtilsTests(unittest.TestCase):
                 self.assertEqual(real[i][j], expected[j][i])
                 self.assertEqual(real[i][j], real[j][i])
 
+    def testInclusiveSimilarity(self):
+        from decaf.utils import inclusive_similarity
+
+        for i in xrange(2):
+            s1, s2, _ = inclusive_similarity(self.phars[0], self.phars[i])
+            self.assertEqual(s1, 1.0)
+
     def testModel(self):
         from decaf.utils import combine_pharmacophores as cp
 
