@@ -7,12 +7,8 @@ by Marta Stepniewska
 """
 
 from decaf import PHARS, COLORS, Pharmacophore
-from collections import deque
 import numpy as np
 import math
-import matplotlib.pyplot as plt
-from matplotlib.patches import Wedge
-from matplotlib.font_manager import FontManager
 
 
 def compare_nodes(n1, n2):
@@ -57,233 +53,95 @@ def compare_nodes(n1, n2):
     return sim * c, t
 
 
-def __POS(p, start):
-    """Compute partial ordering set (POS).
+def get_rings(phar):
+    """Find ring systems in given Pharmacophore. Note that only nodes of type
+    "R" are considered.
 
     Args:
-       p (Pharmacophore): 
-       start (int): node index to start from
+       phar (Pharmacophore): pharmacophore
 
     Returns:
-       list: POS representation, list of dictionaries with:
-          * idx (int): position in ordering
-          * prev (int): previous node in graph (not in ordering!)
-          * i (int): node id
-          * out_dg (float): node out-degree
-
-
-    see: Xu, Jun. "GMA: a generic match algorithm for structural homomorphism,
-         isomorphism, and maximal common substructure match and its
-         applications." J. Chem. Inf. Comput. Sci., 1996, 36 (1), 25–34
-    """
-    stack = deque([start])
-    seen = []
-    order = [{"prev": None, "i": i, "idx": None,
-             "out_dg": np.sum(p.edges[i] > 0)} for i in xrange(p.numnodes)]
-
-    idx = 0
-    while stack:
-        i = stack.pop()
-        if i not in seen:
-            order[i]["idx"] = idx
-            seen.append(i)
-            idx += 1
-        for j in np.where(p.edges[i] > 0)[0]:
-            if j not in seen:
-                stack.append(j)
-                order[j]["out_dg"] -= 1
-                order[j]["prev"] = idx-1
-
-    return sorted(order, key=lambda x: x["idx"])
-
-
-def __CBA(p1, p2, start, order, mapping, dist1, dist2, dist_tol, score=None,
-          cost=None, map_order=None, idx=None, seen=None):
-    """Run constrained backtracking algorithm (CBA).
-
-    Args:
-       p1, p2 (Pharmacophore): models to align
-       start (int): first node to map
-       order (list): partial ordering set for p1
-       mapping (numpy array): array describing nodes compatibility
-       dist1, dist2 (numpy array): distances between nodes
-       dist_tol (float): distance tolerance
-
-       args needed for recursive calls:
-          score (float): current similarity score
-          cost (float): current edge differences cost
-          map_order (list): partial ordering set for p2
-          idx (int)- current index
-          seen (list): visited nodes
-
-    Returns:
-        res (list): all common substructure matches (lists of dictionaries
-          complementary to given order)
-
-
-    see: Xu, Jun. "GMA: a generic match algorithm for structural homomorphism,
-         isomorphism, and maximal common substructure match and its
-         applications." J. Chem. Inf. Comput. Sci., 1996, 36 (1), 25–34
+       list of dicts: nodes representing compressed ring systems
+       list of sets: members of found ring systems ()
     """
 
-    def compatible(idx, candidate):
-        cand_map = order[idx]["i"]
-        if mapping[cand_map][candidate] <= 0:
-            return False   # incompatible types
+    if not isinstance(phar, Pharmacophore):
+        raise TypeError("Expected Pharmacophore, got %s instead" %
+                        type(phar).__name__)
 
-        if order[idx]["out_dg"] > map_order[candidate]["out_dg"]:
-            return False    # too few neighbors
+    def dfs_backedge(p, n, to_check=None, visited=None, spanning_tree=None):
 
-        for node in seen:
-            node_map = order[map_order[node]["idx"]]["i"]
-            d = 0
-            if p2.edges[candidate][node] != 0 and \
-               p1.edges[cand_map][node_map] != 0:
-                d = math.fabs(p2.edges[candidate][node] - p1.edges[cand_map][node_map])
-            elif p2.edges[candidate][node] != 0:
-                d = math.fabs(p2.edges[candidate][node] - dist1[cand_map][node_map])
-            elif p1.edges[cand_map][node_map] != 0:
-                d = math.fabs(dist2[candidate][node] - p1.edges[cand_map][node_map])
-            if d > dist_tol:
-                return False    # difference between lengths above cutoff
+        cycles = []
+        if visited is None:
+            visited = []
 
-        return True     # node is compatible
+        if to_check is None:
+            to_check = set(range(p.numnodes))
 
-    if seen is None:
-        seen = []
-    seen.append(start)
+        if spanning_tree is None:
+            spanning_tree = {n: None}
 
-    if idx is None:
-        idx = 0
+        tmp = list(to_check)
 
-    if score is None:
-        score = 0.0
-    if cost is None:
-        cost = 0.0
+        for v in tmp:
+            if v in np.where(p.edges[n] > 0.0)[0]:
+                if v not in visited:
+                    visited.append(v)
+                    to_check.remove(v)
+                    spanning_tree[v] = n
+                    cycles += dfs_backedge(p, v, to_check, visited,
+                                           spanning_tree)
+                elif spanning_tree[n] != v:
+                    w = n
+                    cycle = set([v])
+                    add = True
+                    while w != v:
+                        v = spanning_tree[v]
+                        cycle.add(v)
+                    if add:
+                        cycles.append(cycle)
+        return cycles
 
-    if map_order is None:
-        map_order = [{"i": i, "idx": None, "out_dg": np.sum(p2.edges[i] > 0)}
-                     for i in xrange(p2.numnodes)]
-    map_order[start]["idx"] = idx
-    res = []
+    rings_members = set()
+    for n in xrange(phar.numnodes):
+        if "R" in phar.nodes[n]["type"]:
+            rings_members.add(n)
 
-    #add similarity score for last mapped pair of nodes
-    score += mapping[order[idx]["i"]][start]
+    cycles = []
+    while len(rings_members) > 0:
+        node = rings_members.pop()
+        cycles += dfs_backedge(phar, node, to_check=rings_members)
 
-    #add edge length cost for last mapped pair of nodes
-    for node in seen:
-        node_map = order[map_order[node]["idx"]]["i"]
-        if p2.edges[start][node] != 0 and \
-           p1.edges[order[idx]["i"]][node_map] != 0:
-            cost += math.fabs(p2.edges[start][node] - p1.edges[order[idx]["i"]][node_map])
-        elif p2.edges[start][node] != 0:
-            cost += math.fabs(p2.edges[start][node] - dist1[order[idx]["i"]][node_map])
-        elif p1.edges[order[idx]["i"]][node_map] != 0:
-            cost += math.fabs(dist2[start][node] - p1.edges[order[idx]["i"]][node_map])
+    # join fused ring systems
+    to_del = []
+    for i in xrange(len(cycles)):
+        for j in xrange(i):
+            if len(cycles[i] & cycles[j]) > 0:
+                cycles[i] = (cycles[i] | cycles[j])
+                to_del.append(j)
 
-    idx += 1
-
-    if idx == len(order):   # all nodes mapped
-        res.append((score, cost, map_order))
-
-    else:
-        prev_mapped = order[idx]["prev"]
-        prev = None
-        for j in map_order:
-            if j["idx"] == prev_mapped:
-                prev = j["i"]
-                break
-
-        to_check = []
-        for j in np.where(p2.edges[prev] > 0)[0]:
-            if j not in seen:
-                if compatible(idx, j):
-                    to_check.append(j)
-
-        if len(to_check) == 0:
-            res.append((score, cost, map_order))
-
-        elif len(to_check) >= 1:
-            for j in to_check:
-                res += __CBA(p1, p2, j, order[:], mapping, dist1, dist2,
-                             dist_tol, score, cost,
-                             [m.copy() for m in map_order], idx, seen[:])
-
-    return res
-
-
-def __extend(p1, p2, matched, to_check, mapping, dist_tol):
-    """Extend common substructure for given Pharmacophores.
-
-    Args:
-       p1, p2 (Pharmacophore): models to align
-       matched (list): tuples representing already matched nodes
-       to_check (list): list of lists with nodes indicies to check
-       mapping (numpy array): array describing nodes compatibility
-       dist_tol (float): distance tolerance
-
-    Returns:
-       res (list): all common substructure matches (lists of tuples
-         representing matched nodes)
-
-    see: Cao, Yiqun, Tao Jiang, and Thomas Girke. "A maximum common
-         substructure-based algorithm for searching and predicting drug-like
-         compounds." Bioinformatics. 2008 Jul 1;24(13):i366-74
-    """
-
-    def next_node(p, m, to_check):
-        connected = np.sum(p.edges[np.array([i[0] for i in m])], axis=0)
-        max_possible = np.max(connected[np.array(to_check[0])])
-
-        best_score = 0.0
-        best = None
-        for i in to_check[0]:
-            if connected[i] == max_possible:
-                s = np.max(mapping[i, np.array(to_check[1])])
-                if s > best_score:
-                    best_score = s
-                    best = i
-
-        return best
-
-    def compatible(u, v, matched):
-        if mapping[u][v] <= 0.0:
-            return False
+    for i in xrange(len(cycles)-1, -1, -1):
+        if i in to_del:
+            del cycles[i]
         else:
-            neigh1 = set(np.where(p1.edges[u] > 0.0)[0])
-            neigh2 = set(np.where(p2.edges[v] > 0.0)[0])
-            connected = False
-            for i in xrange(len(matched)):
-                if matched[i][0] in neigh1:
-                    if matched[i][1] in neigh2:
-                        if math.fabs(p1.edges[u][matched[i][0]] -
-                                     p2.edges[v][matched[i][1]]) <= dist_tol:
-                            connected = True
-                        else:
-                            return False
-                    else:
-                        return False
-                elif matched[i][1] in neigh2:
-                    return False
-            return connected
+            cycles[i] = list(cycles[i])
 
-    res = []
-    while len(to_check[0]) > 0 and len(to_check[1]) > 0:
-        u = next_node(p1, matched, to_check)
-        if u is not None:
-            to_check[0].remove(u)
-            for v in to_check[1]:
-                if compatible(u, v, matched):
-                    tmp = [i for i in to_check[1] if i != v]
+    ring_nodes = []
+    for i in xrange(len(cycles)):
+        n = float(len(cycles[i]))
+        ring_node = {"label": "R"+str(i), "freq": 0.0, "type": {}}
 
-                    res += __extend(p1, p2, matched[:]+[(u, v)],
-                                    [to_check[0][:], tmp], mapping, dist_tol)
-        else:
-            res = [matched]
-            return res
-    if len(res) == 0:
-        res = [matched]
-    return res
+        for j in cycles[i]:
+            ring_node["freq"] += phar.nodes[j]["freq"]
+            for t in phar.nodes[j]["type"]:
+                if t not in ring_node["type"]:
+                    ring_node["type"][t] = phar.nodes[j]["type"][t]
+                else:
+                    ring_node["type"][t] += phar.nodes[j]["type"][t]
+
+        ring_nodes.append(ring_node)
+
+    return ring_nodes, cycles
 
 
 def distances(p):
@@ -385,7 +243,7 @@ def dfs(p, n, to_check=None, visited=None):
 
 def split_components(p, nodes=None):
     """Find all connected components in given Pharmacophore.
-    
+
     Args:
        p (Pharmacophore): model to analyse
        nodes (list, optional): list of nodes indices; if given, find
@@ -426,53 +284,331 @@ def split_components(p, nodes=None):
     return sorted(components, key=len, reverse=True)
 
 
-def __components(phars, pairs):
-    """Find all connected components in common substructure of two Pharmacophores.
+def __modular_product(p1, p2, dist1=None, dist2=None, dist_tol=0):
+    """Create modular product of given pharmacphores, that can be used to find
+    their best coarse-grained alignment. All ring systems are compressed to
+    single nodes and treated as sets of features. Distances between nodes are
+    used as constraints to reduce number of edges in the graph.
 
-    Arguments:
-       phars (tuple): two Pharmacophores
-       pairs (list): list of pairs of corresponding nodes
+    Args:
+       p1, p2 (Pharmacophore): models to align
+       dist1, dist2 (numpy array, optional): arrays with distances between all
+         nodes in models
+       dist_tol (float, optional): accept distance differences below this
+         threshold
 
     Returns:
-       list: nodes indicies grouped into connected components, sorted by
-         component size
+       modular product graph, consists of:
+         list of dicts: nodes
+         1D numpy array: partial scores coresponging to nodes
+         2D numpy array: edges
+         2D numpy array: length differences costs for all edges
+        
     """
-    p1, p2 = phars
-    nodes1 = [i[0] for i in pairs]
-    nodes2 = [i[1] for i in pairs]
-    components1 = split_components(p1, nodes1)
-    components2 = split_components(p2, nodes2)
 
-    def nested_idx(item, l):
-        for idx, sublist in enumerate(l):
-            if item in sublist:
-                return idx
+    if dist1 is None:
+        dist1 = distances(p1)
+        dist1[p1.edges > 0] = p1.edges[p1.edges > 0]
 
-    if len(components1) == 1 and len(components2) == 1:
-        return [pairs]
-    else:
-        partition = {}
-        for pair in pairs:
-            nr1 = nested_idx(pair[0], components1)
-            nr2 = nested_idx(pair[1], components2)
-            if (nr1, nr2) not in partition:
-                partition[(nr1, nr2)] = [pair]
+    if dist2 is None:
+        dist2 = distances(p2)
+        dist2[p2.edges > 0] = p2.edges[p2.edges > 0]
+
+    nodes = []
+    scores = []
+    rings1, members1 = get_rings(p1)
+    rings2, members2 = get_rings(p2)
+
+    rings_members1 = [node for cycle in members1 for node in cycle]
+    rings_members2 = [node for cycle in members2 for node in cycle]
+
+    for i in xrange(p1.numnodes):
+        for j in xrange(p2.numnodes):
+            if i in rings_members1 and j in rings_members2:
+                # do not align parts of rings
+                # whole rings will be aligned later
+                continue
+            weighted_freq, _ = compare_nodes(p1.nodes[i], p2.nodes[j])
+            if weighted_freq > 0.0:
+                nodes.append({"n1": i, "n2": j})
+                scores.append(weighted_freq)
+
+    for i in xrange(len(rings1)):
+        for j in xrange(len(rings2)):
+            if -1 <= len(members1[i]) - len(members2[j]) <= 1:
+            # force similar ring size
+                weighted_freq, _ = compare_nodes(rings1[i], rings2[j])
+                if weighted_freq > 0.0:
+                    nodes.append({"n1": p1.numnodes+i, "n2": p2.numnodes+j,
+                                  "members": [members1[i], members2[j]]})
+                    scores.append(weighted_freq)
+
+    n = len(nodes)
+    scores = np.array(scores)
+    edges = np.zeros((n, n))
+    costs = np.zeros((n, n))
+
+    for i in xrange(n):
+        for j in xrange(i):
+
+            if nodes[i]["n1"] == nodes[j]["n1"] or \
+               nodes[i]["n2"] == nodes[j]["n2"]:
+                continue
+
+            if nodes[i]["n1"] >= p1.numnodes:   # ring node
+                u = nodes[i]["n1"] - p1.numnodes
+                v = nodes[i]["n2"] - p2.numnodes
+                # get all nodes forming a ring system
+                idxi1 = members1[u]
+                idxi2 = members2[v]
+
             else:
-                partition[(nr1, nr2)].append(pair)
-        return sorted(partition.values(), key=len)
+                u = nodes[i]["n1"]
+                v = nodes[i]["n2"]
+                idxi1 = [u]
+                idxi2 = [v]
+
+            if nodes[j]["n1"] >= p1.numnodes:   # ring node
+                w = nodes[j]["n1"] - p1.numnodes
+                s = nodes[j]["n2"] - p2.numnodes
+                idxj1 = members1[w]
+                idxj2 = members2[s]
+
+            else:
+                w = nodes[j]["n1"]
+                s = nodes[j]["n2"]
+                idxj1 = [w]
+                idxj2 = [s]
+
+            if len(set(idxi1) & set(idxj1)) > 0 or \
+               len(set(idxi2) & set(idxj2)) > 0:
+                # do not connect node with itself
+                continue
+
+            is_connected = False
+            # compute distances in graphs
+            # for ring nodes find shortest distances
+            d1 = float("inf")
+            for p in idxi1:
+                for q in idxj1:
+                    if p1.edges[p, q] > 0:
+                        is_connected = True
+                    if dist1[p, q] < d1:
+                        d1 = dist1[p, q]
+
+            d2 = float("inf")
+            for p in idxi2:
+                for q in idxj2:
+                    if p2.edges[p, q] > 0:
+                        is_connected = True
+                    if dist2[p, q] < d2:
+                        d2 = dist2[p, q]
+
+            if math.fabs(d1 - d2) <= dist_tol:
+                if is_connected:
+                    costs[i, j] = costs[j, i] = math.fabs(d1 - d2)
+                edges[i, j] = edges[j, i] = 1.0
+    return nodes, scores, edges, costs
 
 
-def map_pharmacophores(p1, p2, dist_tol=1.0):
+def __BronKerbosch(edges, P=None, X=None, R=None, degrees=None, neigh=None):
+    """Bron-Kerbosch algorithm for finding all maximal cliques in a graph
+
+    Args:
+       edges (numpy array): array representing edges in the graph
+       P (set of ints, optional): nodes to check
+       X (set of ints, optional): excluded nodes
+       R (set of ints, optional): current clique
+       degrees (numpy array, optional): nodes degrees
+       neigh (dict, optional): dictionary of sets of neighbours for all nodes
+
+    Returns:
+       list of sets: list of all maximal cliques
+
+    see:
+       Bron C, Kerbosch J. "Algorithm 457: finding all cliques of an undirected
+       graph." Commun ACM. 1973;16(9):575–577.
+
+       Cazals F, Karande C. "A note on the problem of reporting maximal
+       cliques." Theor Comput Sci. 2008;407(1–3):564–568.
+    """
+
+    if P is None:
+        P = set(range(len(edges)))
+    if X is None:
+        X = set()
+    if R is None:
+        R = set()
+
+    if degrees is None:
+        degrees = np.sum(edges > 0, axis=1)
+
+    if neigh is None:
+        neigh = {}
+        for i in xrange(len(edges)):
+            neigh[i] = set(np.where(edges[i] > 0)[0])
+
+    if len(P) == 0 and len(X) == 0:
+        return [R]
+    else:
+        cliques = []
+        candidates = np.array(list(P | X))
+        # try to select pivot which minimizes number of recursive calls
+        pivot = candidates[np.argmax(degrees[candidates])]
+
+        for v in (P - neigh[pivot]):
+            cliques += __BronKerbosch(edges, degrees=degrees, R=(R | set([v])),
+                                      P=(P & neigh[v]), X=(X & neigh[v]),
+                                      neigh=neigh)
+            P = P - set([v])
+            X = X | set([v])
+        return cliques
+
+
+def __align_rings(p1, p2, n1, n2, idx1, idx2, mapping=None, dist1=None,
+                  dist2=None, dist_tol=0):
+    """Align rings from coarse-grained alignment.
+
+    Args:
+       p1, p2 (Pharmacophore): models to align
+       n1, n2 (list of numpy arrays): nodes to align. i-th array of both
+         lists contains parts of coarse-grained alignment (i.e. ring systems)
+         that should be mapped to each other.
+       idx1, idx2 (list of ints): lists of aligned nodes
+       mapping (numpy array, optional): array describing nodes compatibility
+       dist1, dist2 (numpy array, optional): arrays with distances between all
+         nodes in models
+       dist_tol (float, optional): accept distance differences below this
+         threshold
+
+    Returns:
+       float: unnormalized similarity score
+       float: edge length differences cost
+       2D list: list of two lists representing matched nodes
+    """
+
+    assert len(n1) == len(n2), "wrong n1 or n2"
+
+    if mapping is None:
+        mapping = np.zeros((p1.numnodes, p2.numnodes))
+
+        for i in xrange(p1.numnodes):
+            for j in xrange(p2.numnodes):
+                weighted_freq, _ = compare_nodes(p1.nodes[i], p2.nodes[j])
+                if weighted_freq > 0.0:
+                    mapping[i][j] = weighted_freq
+
+    if dist1 is None:
+        dist1 = distances(p1)
+        dist1[p1.edges > 0] = p1.edges[p1.edges > 0]
+
+    if dist2 is None:
+        dist2 = distances(p2)
+        dist2[p2.edges > 0] = p2.edges[p2.edges > 0]
+
+    # create modular product of graph using alignment as constraints
+    nodes = []
+    scores = []
+
+    assert len(idx1) == len(idx2), "unequal subgraphs sizes"
+    old_len = len(idx1)
+
+    for i in xrange(old_len):
+        weighted_freq, _ = compare_nodes(p1.nodes[idx1[i]], p2.nodes[idx2[i]])
+        assert weighted_freq > 0, "wrong alignment given"
+        nodes.append({"n1": idx1[i], "n2": idx2[i]})
+        scores.append(weighted_freq)
+
+    for i in xrange(len(n1)):
+        possible_matches = np.where(mapping[n1[i], :][:, n2[i]] > 0)
+        pairs1 = n1[i][possible_matches[0]]
+        pairs2 = n2[i][possible_matches[1]]
+        if len(idx1) > 0:
+            # find pairs compatible with given alignment
+            d1 = dist1[pairs1, :][:, idx1]
+            d2 = dist2[pairs2, :][:, idx2]
+            compatible = np.where(np.all(np.abs(d1 - d2) <= dist_tol,
+                                         axis=1))[0]
+        else:
+            # empty alignment given, accept everything
+            compatible = np.array(range(len(pairs1)))
+
+        for i in compatible:
+            weighted_freq, _ = compare_nodes(p1.nodes[pairs1[i]],
+                                             p2.nodes[pairs2[i]])
+            assert weighted_freq > 0, "wrong possible matches"
+            nodes.append({"n1": pairs1[i], "n2": pairs2[i]})
+            scores.append(weighted_freq)
+
+    scores = np.array(scores)
+
+    n = len(nodes)
+    edges = np.zeros((n, n))
+    costs = np.zeros((n, n))
+
+    for i in xrange(n):
+        for j in xrange(i):
+            if nodes[i]["n1"] == nodes[j]["n1"] or \
+               nodes[i]["n2"] == nodes[j]["n2"]:
+                continue
+
+            is_connected = False
+
+            if p1.edges[nodes[i]["n1"], nodes[j]["n1"]] > 0:
+                is_connected = True
+            d1 = dist1[nodes[i]["n1"], nodes[j]["n1"]]
+
+            if p2.edges[nodes[i]["n2"], nodes[j]["n2"]] > 0:
+                is_connected = True
+            d2 = dist2[nodes[i]["n2"], nodes[j]["n2"]]
+
+            if math.fabs(d1 - d2) <= dist_tol:
+                if is_connected:
+                    costs[i, j] = costs[j, i] = math.fabs(d1 - d2)
+                edges[i, j] = edges[j, i] = 1.0
+
+    alignment = range(old_len)
+    score = np.sum(scores[alignment])
+    cost = np.sum(costs[alignment, :][:, alignment]) / 2
+    scorecost = score-cost
+
+    for clique in __BronKerbosch(edges):
+        clique = list(clique)
+        s = np.sum(scores[clique])
+        c = np.sum(costs[clique, :][:, clique]) / 2
+
+        if (s - c > scorecost) or (s - c == scorecost and s > score):
+            idx1 = []
+            idx2 = []
+            n1 = []
+            n2 = []
+            score = s
+            cost = c
+            scorecost = s - c
+
+            for pair in clique:
+                idx1.append(nodes[pair]["n1"])
+                idx2.append(nodes[pair]["n2"])
+    return score, cost, [idx1, idx2]
+
+
+def map_pharmacophores(p1, p2, dist_tol=0.0, coarse_grained=True):
     """Find best common substructure match for two Pharmacophores.
 
     Args:
-       p1, p2 (pharmacophore): models to align
-       dist_tol (float, optional): accept distance differences below this threshold
+       p1, p2 (Pharmacophore): models to align
+       dist_tol (float, optional): accept distance differences below this
+         threshold
+       coarse_grained (bool, optional): if True, find alignment for compressed
+         ring systems. Otherwise align ring members afer finding coarse-grained
+         alignment.
 
     Returns:
-        score (float): unnormalised similarity score
-        cost (float): edge length differences cost
-        best_subgraph (lists): tuples representing matched nodes
+       float: unnormalized similarity score
+       float: edge length differences cost
+       2D list: list of two lists representing matched nodes. If coarse-grained
+         alignment is computed, ring systems are represented as numpy arrays
+         containing indices of nodes forming a system
     """
     if not isinstance(p1, Pharmacophore):
         raise TypeError("Expected Pharmacophore, got %s instead" %
@@ -488,12 +624,8 @@ def map_pharmacophores(p1, p2, dist_tol=1.0):
     if dist_tol < 0:
         raise ValueError("dist_tol must be greater than or equal 0")
 
-    #always map smaller pharmacophore to bigger
-    if p1.numnodes > p2.numnodes:
-        changed = True
-        p1, p2 = p2, p1
-    else:
-        changed = False
+    if not isinstance(coarse_grained, bool):
+        raise TypeError("coarse_grained must be bool!")
 
     mapping = np.zeros((p1.numnodes, p2.numnodes))
 
@@ -504,166 +636,75 @@ def map_pharmacophores(p1, p2, dist_tol=1.0):
                 mapping[i][j] = weighted_freq
 
     dist1 = distances(p1)
+    dist1[p1.edges > 0] = p1.edges[p1.edges > 0]
     dist2 = distances(p2)
+    dist2[p2.edges > 0] = p2.edges[p2.edges > 0]
 
-    best_subgraphs = [[]]
-    score = [0.0]
-    cost = [0.0]
-    scorecost = [float("-inf")]
+    idx1 = []
+    idx2 = []
+    n1 = []
+    n2 = []
+    score = 0.0
+    cost = 0.0
 
-    def compute_cost(matched):
-        dist_diff = np.zeros((len(matched), len(matched)))
+    scorecost = float("-inf")
 
-        for i in xrange(len(matched)):
-            (u1, v1) = matched[i]
-            for j in xrange(i):
-                (u2, v2) = matched[j]
-                diff = 0.0
+    nodes, scores, edges, costs = __modular_product(p1, p2, dist1, dist2,
+                                                    dist_tol)
 
-                #NOT redundant! edge length can differ from shortest distance!
-                if p1.edges[u1, u2] != 0 and p2.edges[v1, v2] != 0:
-                    diff = math.fabs(p1.edges[u1, u2] - p2.edges[v1, v2])
-                elif p1.edges[u1, u2] != 0:
-                    diff = math.fabs(p1.edges[u1, u2] - dist2[v1, v2])
-                elif p2.edges[v1, v2] != 0:
-                    diff = math.fabs(dist1[u1, u2] - p2.edges[v1, v2])
-                dist_diff[i][j] = dist_diff[j][i] = diff
+    ring_pairs = [i for i in xrange(len(nodes)) if "members" in nodes[i]]
 
-        to_remove = list(set(np.where(dist_diff > dist_tol)[0]))
-        cost = np.sum(dist_diff) / 2.0
-        return cost, to_remove
+    for clique in __BronKerbosch(edges):
+        clique = list(clique)
+        s = np.sum(scores[clique])
+        c = np.sum(costs[clique, :][:, clique]) / 2
 
-    def compute_score(matched):
-        idx1 = [i[0] for i in matched]
-        idx2 = [i[1] for i in matched]
+        if (s - c > scorecost) or (s - c == scorecost and s > score):
+            score = s
+            cost = c
+            scorecost = s - c
 
-        if len(np.where(mapping[idx1, idx2] == 0.0)[0]) > 0:
-            return 0.0
-        else:
-            score = np.sum(mapping[idx1, idx2])
-            return score
+            rings = [i for i in clique if i in ring_pairs]
+            idx1 = []
+            idx2 = []
+            n1 = []
+            n2 = []
 
-    def update_score(matched, s=None, c=None):
-        """remember all subgraphs with highest difference between score and cost"""
-        #TODO penalty for breaking rings?
-        matched.sort()
+            for pair in clique:
+                if pair in rings:
+                    n1.append(np.array(nodes[pair]["members"][0]))
+                    n2.append(np.array(nodes[pair]["members"][1]))
+                else:
+                    idx1.append(nodes[pair]["n1"])
+                    idx2.append(nodes[pair]["n2"])
 
-        if matched in best_subgraphs:
-            return
-
-        if s is None:
-            s = compute_score(matched)
-
-        if s < scorecost[0]:
-            return    # impossible to get higher score
-
-        if c is None:
-            c, to_remove = compute_cost(matched)
-            if len(to_remove) > 0:
-                for i in to_remove:
-                    for comp in __components((p1, p2), matched[:i]+matched[i+1:]):
-                        to_check = [range(p1.numnodes), range(p2.numnodes)]
-                        for (n1, n2) in comp:
-                            to_check[0].remove(n1)
-                            to_check[1].remove(n2)
-                        tmp = __extend(p1, p2, comp, to_check, mapping, dist_tol)
-                        for extended in tmp:
-                            update_score(extended)
-                return
-
-        sc = s - c
-        if sc > scorecost[0]:
-            score[0] = s
-            cost[0] = c
-            best_subgraphs[0] = matched
-            scorecost[0] = sc
-            del score[1:]
-            del cost[1:]
-            del best_subgraphs[1:]
-
-        elif sc == scorecost[0]:
-            best_subgraphs.append(matched)
-            score.append(s)
-            cost.append(c)
-
-        return
-
-    completed = False
-    for i in xrange(p1.numnodes):
-        if completed:
-            break
-        r = __POS(p1, i)
-        for j in np.where(mapping[i] > 0)[0]:
-            tmp = __CBA(p1, p2, j, r, mapping, dist1, dist2, dist_tol)
-
-            #highest score and lowest cost first
-            tmp.sort(key=lambda x: (-x[0], x[1]))
-
-            best_score = tmp[0][0] - tmp[0][1]
-            if best_score < scorecost[0]:
-                continue    # impossible to get higher score, check next
-            for t in tmp:
-                map_score = t[0]
-                map_cost = t[1]
-                if map_score - map_cost < best_score:
-                    break
-                map_r = t[2]
-                map_r.sort(key=lambda x: x["idx"])
-                idx2 = []
-                for n in map_r:
-                    if n["idx"] is not None:
-                        idx2.append(n["i"])
-                idx1 = [k["i"] for k in r[:len(idx2)]]
-                matched = [(idx1[k], idx2[k]) for k in xrange(len(idx1))]
-                update_score(matched, map_score, map_cost)
-
-            map_length = max([len(i) for i in best_subgraphs])
-            if map_length == p1.numnodes or map_length == p2.numnodes \
-               and score[0] > 0 and cost == 0:
-                completed = True
-                break
-
-    if len(best_subgraphs[0]) == 0:
-        return 0.0, 0.0, [[]]
-
-    for i in best_subgraphs:
-        to_check = [range(p1.numnodes), range(p2.numnodes)]
-        for pair in i:
-            to_check[0].remove(pair[0])
-            to_check[1].remove(pair[1])
-        tmp = __extend(p1, p2, i, to_check, mapping, dist_tol)
-        for t in tmp:
-            update_score(t)
-
-    #return subgraph with best similarity score
-    best_s = max(score)
-    best_c = 0.0
-    idx = -1
-
-    for i in xrange(len(score)):
-        if score[i] == best_s:
-            idx = i
-            best_c = cost[i]
-            break
-
-    if changed:
-        best_inverted = [(j[1], j[0]) for j in best_subgraphs[idx]]
-        return best_s, best_c, best_inverted
+    if not coarse_grained:
+        score, cost, [idx1, idx2] = __align_rings(p1, p2, n1, n2, idx1, idx2,
+                                                  mapping, dist1, dist2,
+                                                  dist_tol)
     else:
-        return best_s, best_c, best_subgraphs[idx]
+        idx1 += n1
+        idx2 += n2
+
+    return score, cost, [idx1, idx2]
 
 
-def similarity(p1, p2, dist_tol=1):
+def similarity(p1, p2, dist_tol=0.0, coarse_grained=True):
     """Find common part of two Pharmacophores, calculate normalized similarity
     score and edge length differences cost.
-    
+
     Args:
        p1, p2 (pharmacophore): models to align
-       dist_tol (float, optional): accept distance differences below this threshold
+       dist_tol (float, optional): accept distance differences below this
+         threshold
+       coarse_grained (bool, optional): if True, find alignment for compressed
+         ring systems. Otherwise align ring members afer finding coarse-grained
+         alignment.
+
 
     Returns:
         score (float): normalized similarity score (value between 0 and 1)
-        cost (float): edge length differences cost     
+        cost (float): edge length differences cost
     """
     if not isinstance(p1, Pharmacophore):
         raise TypeError("Expected Pharmacophore, got %s instead" %
@@ -679,18 +720,20 @@ def similarity(p1, p2, dist_tol=1):
     if dist_tol < 0:
         raise ValueError("dist_tol must be greater than or equal 0")
 
-    score, cost, _ = map_pharmacophores(p1, p2, dist_tol)
+    if not isinstance(coarse_grained, bool):
+        raise TypeError("coarse_grained must be bool!")
+
+    score, cost, _ = map_pharmacophores(p1, p2, dist_tol, coarse_grained)
     a1 = 0.0
     a2 = 0.0
     for n in p1.nodes:
         a1 += n["freq"]
     for n in p2.nodes:
         a2 += n["freq"]
-
     return (score / (a1 + a2)), cost
 
 
-def combine_pharmacophores(p1, p2, dist_tol=1.0, freq_cutoff=0.0):
+def combine_pharmacophores(p1, p2, dist_tol=0.0, freq_cutoff=0.0):
     """Create new model from Pharmacophores p1 and p2
 
     Find common part of two Pharmacophores, add unique elements and calculate
@@ -698,7 +741,8 @@ def combine_pharmacophores(p1, p2, dist_tol=1.0, freq_cutoff=0.0):
 
     Args:
       p1, p2 (Pharmacophore): models to combine
-      dist_tol (float, optional): accept distance differences below this threshold
+      dist_tol (float, optional): accept distance differences below this
+        threshold
       freq_cutoff (float, optional): skip unique nodes with frequencies below
         this threshold
 
@@ -725,29 +769,35 @@ def combine_pharmacophores(p1, p2, dist_tol=1.0, freq_cutoff=0.0):
     if freq_cutoff < 0 or freq_cutoff > 1:
         raise ValueError("Invalid freq_cutoff! Use value in the range [0,1]")
 
-    #find common pharmacophore
-    _, _, mapping = map_pharmacophores(p1, p2, dist_tol)
+    # find common pharmacophore
+    _, _, mapped_nodes = map_pharmacophores(p1, p2, dist_tol,
+                                            coarse_grained=False)
+    dist1 = distances(p1)
+    dist1[p1.edges > 0] = p1.edges[p1.edges > 0]
+    dist2 = distances(p2)
+    dist2[p2.edges > 0] = p2.edges[p2.edges > 0]
 
-    #we'll need it later
-    mapped_nodes = [[], []]
+    # we will need it later
     added = {0: {}, 1: {}}
 
-    #create new graph from common part
+    # create new graph from common part
     molecules = p1.molecules + p2.molecules
+
     title = "("+p1.title+")+("+p2.title+")"
     nodes = []
 
     idx = 0
-    for n in mapping:
-        _, types = compare_nodes(p1.nodes[n[0]], p2.nodes[n[1]])
+    for i in xrange(len(mapped_nodes[0])):
+        u = p1.nodes[mapped_nodes[0][i]]
+        v = p2.nodes[mapped_nodes[1][i]]
+        _, types = compare_nodes(u, v)
         nodes.append({"label": idx, "type": types,
-                      "freq": p1.nodes[n[0]]["freq"] + p2.nodes[n[1]]["freq"]})
-        for i in [0, 1]:
-            added[i][idx] = n[i]
-            mapped_nodes[i].append(n[i])
+                      "freq": u["freq"] + v["freq"]})
+        for j in [0, 1]:
+            added[j][idx] = mapped_nodes[j][i]
         idx += 1
 
-    #add edges
+    # add edges
     edges = np.zeros((idx, idx))
     for i in xrange(idx):
         no1 = (added[0][i], added[1][i])
@@ -756,39 +806,82 @@ def combine_pharmacophores(p1, p2, dist_tol=1.0, freq_cutoff=0.0):
             no2 = (added[0][j], added[1][j])
             freq1 = p1.nodes[no1[0]]["freq"] + p1.nodes[no2[0]]["freq"]
             freq2 = p2.nodes[no1[1]]["freq"] + p2.nodes[no2[1]]["freq"]
-            d1 = p1.edges[no1[0], no2[0]]
-            d2 = p2.edges[no1[1], no2[1]]
-            if not d1:
-                dist = d2
-            elif not d2:
-                dist = d1
-            else:
+            if p1.edges[no1[0], no2[0]] or p2.edges[no1[1], no2[1]]:
+                d1 = dist1[no1[0], no2[0]]
+                d2 = dist2[no1[1], no2[1]]
                 dist = (d1 * freq1 + d2 * freq2) / (freq1 + freq2)
-            edges[i, j] = edges[j, i] = dist
+                edges[i, j] = edges[j, i] = dist
 
     new_p = Pharmacophore(nodes=nodes, edges=edges, molecules=molecules,
                           title=title)
 
-    #add unique elements
+    # add unique elements
     freq_cutoff = molecules * freq_cutoff
 
-    to_check = [[i for i in xrange(p1.numnodes) if i not in mapped_nodes[0]],
-                [i for i in xrange(p2.numnodes) if i not in mapped_nodes[1]]]
+    to_add = [[i for i in xrange(p1.numnodes) if i not in mapped_nodes[0] and
+               p1.nodes[i]["freq"] >= freq_cutoff],
+              [i for i in xrange(p2.numnodes) if i not in mapped_nodes[1] and
+               p2.nodes[i]["freq"] >= freq_cutoff]]
 
     for (nr, phar) in {0: p1, 1: p2}.iteritems():
-        for node in mapped_nodes[nr]:
-            for n in dfs(phar, node, set(to_check[nr])):
-                to_check[nr].remove(n)
-                if phar.nodes[n]["freq"] >= freq_cutoff:
-                    added[nr][idx] = n
-                    new_p.add_node(phar.nodes[n].copy())
-                    new_p.nodes[idx]["label"] = idx
-                    for (k, v) in added[nr].iteritems():
-                        if phar.edges[n, v] > 0:
-                            new_p.add_edge(k, idx, phar.edges[n, v])
-                    idx += 1
-                else:
-                    break
+        for n in to_add[nr]:
+            added[nr][idx] = n
+            new_p.add_node(phar.nodes[n].copy())
+            new_p.nodes[idx]["label"] = idx
+            for (k, v) in added[nr].iteritems():
+                if phar.edges[n, v] > 0:
+                    new_p.add_edge(k, idx, phar.edges[n, v])
+            idx += 1
+
+    #check if new pharmacophore is connected
+    components = split_components(new_p)
+    comp_nr = len(components)
+
+    if comp_nr > 1:
+        # shortest distances between components
+        comp_dist = np.zeros((comp_nr, comp_nr)) + float("inf")
+
+        # nearest_node[i, j] == id of node from component j, that is nearest to
+        # component i
+        nearest_node = np.zeros((comp_nr, comp_nr), dtype=int)
+        for i in xrange(comp_nr):
+            for j in xrange(i):
+                shortes_dist = float("inf")
+                nearest_nodes = [None, None]
+                for n1 in components[i]:
+                    for n2 in components[j]:
+                        if n1 in added[0] and n2 in added[0]:
+                            d1 = dist1[added[0][n1], added[0][n2]]
+                            freq1 = p1.nodes[added[0][n1]]["freq"] + \
+                                    p1.nodes[added[0][n2]]["freq"]
+                        else:
+                            d1 = 0
+                            freq1 = 0
+                        if n1 in added[1] and n2 in added[1]:
+                            d2 = dist2[added[1][n1], added[1][n2]]
+                            freq2 = p2.nodes[added[1][n1]]["freq"] + \
+                                    p2.nodes[added[1][n2]]["freq"]
+                        else:
+                            d1 = 0
+                            freq2 = 0
+                        dist = (d1 * freq1 + d2 * freq2) / (freq1 + freq2)
+
+                        if dist < shortes_dist:
+                            shortes_dist = dist
+                            nearest_nodes = [n1, n2]
+                comp_dist[i, j] = comp_dist[j, i] = dist
+                nearest_node[i, j] = nearest_nodes[1]
+                nearest_node[j, i] = nearest_nodes[0]
+
+        shortest_connection = np.argmin(comp_dist, axis=1)
+
+        # connect components
+        for i in xrange(comp_nr):
+            j = shortest_connection[i]
+            n1 = nearest_node[i, j]
+            n2 = nearest_node[j, i]
+            new_p.add_edge(n1, n2, comp_dist[i, j])
+
     return new_p
 
 
@@ -798,9 +891,10 @@ def filter_nodes(p, freq_range=(0.0, 1.0), rm_outside=True):
 
     Args:
        p (Pharmacophore): model to filter
-       freq_range (tuple, optional) - two floats, frequence range for filtering
+       freq_range (tuple, optional): two floats, frequence range for filtering
        rm_outside (bool, optional): if True remove nodes with frequencies
-         outside given range; remove nodes with frequencies inside range otherwise
+         outside given range; remove nodes with frequencies inside range
+         otherwise
 
     Returns:
        Pharmacohpre: new model
@@ -845,7 +939,8 @@ def filter_nodes(p, freq_range=(0.0, 1.0), rm_outside=True):
 
 
 def spring_layout(p, c0=0.2, c1=1.0):
-    """Calculate points positions for Pharmacophore depiction using spring layout.
+    """Calculate points positions for Pharmacophore depiction using spring
+    layout.
 
     Args:
        p (Pharmacophore): model to depict
@@ -893,7 +988,7 @@ def draw(p, layout="rd"):
     layout ("spring") to calculate nodes positions.
 
     We recommend to use RDKit ("rd"), as it generates the clearest layouts.
-    
+
     Args:
        p (Pharmacophore): model to depict
        layout (str, optional): layout name
@@ -903,6 +998,10 @@ def draw(p, layout="rd"):
          * matplotlib Figure
          * matplotlib axis
     """
+    import matplotlib.pyplot as plt
+    from matplotlib.patches import Wedge
+    from matplotlib.font_manager import FontManager    
+
     if not isinstance(p, Pharmacophore):
         raise TypeError("Expected Pharmacophore, got %s instead" %
                         type(p).__name__)
@@ -912,17 +1011,19 @@ def draw(p, layout="rd"):
                         type(layout).__name__)
     if layout == "rd":
         try:
-            from decaf.toolkits.rd import layout
+            from decaf2.toolkits.rd import layout
             pos = layout(p)
         except Exception as e:
-            raise ImportError('Cannot use "rd" layout! Use "ob" or "spring" instead', e)
+            raise ImportError('Cannot use "rd" layout! Use "ob" or "spring"'
+                              'instead', e)
 
     elif layout == "ob":
         try:
-            from decaf.toolkits.ob import layout
+            from decaf2.toolkits.ob import layout
             pos = layout(p)
         except Exception as e:
-            raise ImportError('Cannot use "ob" layout! Use "rd" or "spring" instead', e)
+            raise ImportError('Cannot use "ob" layout! Use "rd" or "spring"'
+                              'instead', e)
 
     elif layout == "spring":
         try:
@@ -950,7 +1051,7 @@ def draw(p, layout="rd"):
             np.max(pos[:, 1])+1)
     plt.axis(axis)
 
-    #calculate scaling ratio for font
+    # calculate scaling ratio for font
     ax_coeff = 12. / max((axis[1]-axis[0]), (axis[3]-axis[2]))
 
     for i in xrange(p.numnodes):
