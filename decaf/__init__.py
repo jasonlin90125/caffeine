@@ -12,17 +12,17 @@ import numpy as np
 #SMARTS definition of pharmacophore points:
 PHARS = {"HH": "[#6+0!$(*~[#7,#8,F]),SH0+0v2,s+0,S^3,Cl+0,Br+0,I+0]",  # hydrophobic
          "AR": "[a]",  # aromatic
-         "HA": "[$([O,S;H1;v2]-[!$(*=[O,N,P,S])]),$([O,S;H0;v2]),"
-         "$([O,S;-]),$([N&v3;H1,H2]-[!$(*=[O,N,P,S])]),"
-         "$([N;v3;H0]),$([n,o,s;+0]),F]",    # acceptor
-         "HD": "[N!H0v3,N!H0+v4,OH+0,SH+0,nH+0]"}    # donor
+         "HA": "[!$([#6,F,Cl,Br,I,o,s,nX3,#7v5,#15v5,#16v4,#16v6,*+1,*+2,*+3])]",   # acceptor  
+         "HD": "[!$([#6,H0,-,-2,-3]),$([!H0;#7,#8,#9])]",    # donor
+         "R": "[r]"}    # ring
 
 
 #colors used for pharmacophore depiction
 COLORS = {"HH": "#FFFF00",  # hydrophobic
           "AR": "#FF9900",  # aromatic
           "HA": "#6666FF",    # acceptor
-          "HD": "#CC0000"}   # donor
+          "HD": "#CC0000",   # donor
+          "R": "#AA44AA"}   # ring
 
 
 class Pharmacophore(object):
@@ -108,7 +108,7 @@ class Pharmacophore(object):
            node (dict): node to check
 
         Returns:
-           bool: True if node is valid, False otherwise. 
+           bool: True if node is valid, False otherwise.
         """
         has_type = False
         has_label = False
