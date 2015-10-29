@@ -21,7 +21,7 @@ num_mols = len(ligands)
 phars = [phar_from_mol(mol) for mol in ligands]
 dist = np.zeros((num_mols*(num_mols - 1.0)/2.0))
 cutoff = 0.7
-prefix = "demo/model"
+prefix = "demo-model"
 
 
 def compute_score(idx):

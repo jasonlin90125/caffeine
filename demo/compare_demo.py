@@ -17,7 +17,7 @@ ref = [mol for mol in readfile("smi", "ref.ism")]
 act = [mol for mol in readfile("smi", "actives.ism")]
 inact = [mol for mol in readfile("smi", "inactives.ism")]
 
-prefix = "demo/compare-demo"
+prefix = "compare-demo"
 
 dataset = {}
 dataset["ref"] = [phar_from_mol(mol) for mol in ref]
@@ -27,9 +27,9 @@ dataset["inact"] = [phar_from_mol(mol) for mol in inact]
 
 def compute_scores(tup):
     name = dataset[tup[0]][tup[1]].title
-    res = tup[0]+" "+name
+    res = tup[0]+","+name
     for p in dataset["ref"]:
-        res += " "+str(similarity(p, dataset[tup[0]][tup[1]])[0])
+        res += ","+str(similarity(p, dataset[tup[0]][tup[1]])[0])
     return res
 
 
@@ -53,13 +53,13 @@ while not results.ready():
 
 results = results.get()
 
-name = prefix+"-phar-scores"
+name = prefix+".csv"
 print "Saving results to %s file" % name
 
 f = open(name, "w")
-f.write("label name")
+f.write("label,name")
 for i in xrange(len(ref)):
-    f.write(" ref"+str(i))
+    f.write(",ref"+str(i))
 f.write("\n")
 for row in results:
     f.write(row+"\n")
