@@ -1060,7 +1060,7 @@ def draw(p, layout="rd"):
                         type(layout).__name__)
     if layout == "rd":
         try:
-            from decaf2.toolkits.rd import layout
+            from decaf.toolkits.rd import layout
             pos = layout(p)
         except Exception as e:
             raise ImportError('Cannot use "rd" layout! Use "ob" or "spring"'
@@ -1068,7 +1068,7 @@ def draw(p, layout="rd"):
 
     elif layout == "ob":
         try:
-            from decaf2.toolkits.ob import layout
+            from decaf.toolkits.ob import layout
             pos = layout(p)
         except Exception as e:
             raise ImportError('Cannot use "ob" layout! Use "rd" or "spring"'
