@@ -66,6 +66,18 @@ python setup.py install
 pip install decaf
 ```
 
+You can also install DeCAF and all its dependencies with [conda](http://conda.pydata.org/):
+
+```
+#add conda channels for DeCAF, OpenBabel and RDKit
+conda config --add channels marta-sd
+conda config --add channels mwojcikowski
+conda config --add rdkit
+
+#install DeCAF with all dependencies
+conda install decaf
+```
+
 ## Contact ##
 
 Please contact us with comments, suggestions, questions or bug reports:
