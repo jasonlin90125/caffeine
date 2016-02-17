@@ -7,7 +7,9 @@ by Marta Stepniewska
 """
 
 import numpy as np
+import warnings
 
+warnings.simplefilter('always', UserWarning)
 
 #SMARTS definition of pharmacophore points:
 PHARS = {"HH": "[#6+0!$(*~[#7,#8,F]),SH0+0v2,s+0,S^3,Cl+0,Br+0,I+0]",  # hydrophobic
@@ -97,6 +99,9 @@ class Pharmacophore(object):
         self.molecules = float(molecules)
         self.title = title
 
+        if self.numnodes == 0:
+            warnings.warn("Pharmacophore is empty!")
+
     def __iter__(self):
         return iter(self.nodes)
 
@@ -149,6 +154,9 @@ class Pharmacophore(object):
         Returns:
            bool: True if array is valid, False otherwise.
         """
+        if len(edges) == 0:
+            return True
+
         if (edges.T == edges).all() and (edges.diagonal() == 0).all() and \
            np.min(edges) >= 0:
             return True
@@ -214,6 +222,9 @@ class Pharmacophore(object):
             del self.nodes[i]
             self.edges = np.delete(np.delete(self.edges, i, 0), i, 1)
             self.numnodes -= 1
+
+            if self.numnodes == 0:
+                warnings.warn("Last node removed. Pharmacophore is empty!")
 
     def remove_edge(self, i, j):
         """Remove edge between nodes i and j.

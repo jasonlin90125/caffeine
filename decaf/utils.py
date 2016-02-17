@@ -9,7 +9,9 @@ by Marta Stepniewska
 from decaf import PHARS, COLORS, Pharmacophore
 import numpy as np
 import math
+import warnings
 
+warnings.simplefilter('always', UserWarning)
 
 def compare_nodes(n1, n2):
     """Compare types of two nodes. Return unnormalised similarity score and new
@@ -723,6 +725,10 @@ def similarity(p1, p2, dist_tol=0.0, coarse_grained=True):
     if not isinstance(coarse_grained, bool):
         raise TypeError("coarse_grained must be bool!")
 
+    if p1.numnodes == 0 and p2.numnodes == 0:
+        warnings.warn("Pharmacophores are empty!")
+
+
     score, cost, _ = map_pharmacophores(p1, p2, dist_tol, coarse_grained)
     a1 = 0.0
     a2 = 0.0
@@ -812,8 +818,14 @@ def combine_pharmacophores(p1, p2, dist_tol=0.0, freq_cutoff=0.0):
                 dist = (d1 * freq1 + d2 * freq2) / (freq1 + freq2)
                 edges[i, j] = edges[j, i] = dist
 
+    # do not warn about empty pharmacophore (nodes might be added latter)
+    # warn about empty common part instead
+    warnings.simplefilter('ignore', UserWarning)
     new_p = Pharmacophore(nodes=nodes, edges=edges, molecules=molecules,
                           title=title)
+    warnings.simplefilter('always', UserWarning)
+    if new_p.numnodes == 0:
+        warnings.warn("Empty common part!")
 
     # add unique elements
     freq_cutoff = molecules * freq_cutoff
@@ -1008,6 +1020,9 @@ def spring_layout(p, c0=0.2, c1=1.0):
     if not (c0 > 0 and c1 > 0):
         raise ValueError("Invalid constants! Use values greater than 0.")
 
+    if p.numnodes == 0:
+        raise ValueError("Pharmacophore is empty!")
+
     from scipy.optimize import minimize
 
     def f(x):
@@ -1049,7 +1064,7 @@ def draw(p, layout="rd"):
     """
     import matplotlib.pyplot as plt
     from matplotlib.patches import Wedge
-    from matplotlib.font_manager import FontManager    
+    from matplotlib.font_manager import FontManager
 
     if not isinstance(p, Pharmacophore):
         raise TypeError("Expected Pharmacophore, got %s instead" %
@@ -1058,6 +1073,10 @@ def draw(p, layout="rd"):
     if not isinstance(layout, str):
         raise TypeError("Invalid layout! Expected str, got %s instead." %
                         type(layout).__name__)
+
+    if p.numnodes == 0:
+        raise ValueError("Pharmacophore is empty!")
+
     if layout == "rd":
         try:
             from decaf.toolkits.rd import layout
