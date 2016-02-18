@@ -642,10 +642,10 @@ def map_pharmacophores(p1, p2, dist_tol=0.0, coarse_grained=True):
     dist2 = distances(p2)
     dist2[p2.edges > 0] = p2.edges[p2.edges > 0]
 
-    idx1 = []
-    idx2 = []
-    n1 = []
-    n2 = []
+    idx1 = [[]]
+    idx2 = [[]]
+    n1 = [[]]
+    n2 = [[]]
     score = 0.0
     cost = 0.0
 
@@ -661,34 +661,61 @@ def map_pharmacophores(p1, p2, dist_tol=0.0, coarse_grained=True):
         s = np.sum(scores[clique])
         c = np.sum(costs[clique, :][:, clique]) / 2
 
-        if (s - c > scorecost) or (s - c == scorecost and s > score):
-            score = s
-            cost = c
-            scorecost = s - c
+        if (s - c >= scorecost):
+            if (s - c > scorecost) or (s - c == scorecost and s > score):
+                # replace current solutions with a better one
+                score = s
+                cost = c
+                scorecost = s - c
+    
+                idx1 = [[]]
+                idx2 = [[]]
+                n1 = [[]]
+                n2 = [[]]
+
+            else:
+                # remember another solution with same score
+                idx1.append([])
+                idx2.append([])
+                n1.append([])
+                n2.append([])
 
             rings = [i for i in clique if i in ring_pairs]
-            idx1 = []
-            idx2 = []
-            n1 = []
-            n2 = []
 
             for pair in clique:
                 if pair in rings:
-                    n1.append(np.array(nodes[pair]["members"][0]))
-                    n2.append(np.array(nodes[pair]["members"][1]))
+                    n1[-1].append(np.array(nodes[pair]["members"][0]))
+                    n2[-1].append(np.array(nodes[pair]["members"][1]))
                 else:
-                    idx1.append(nodes[pair]["n1"])
-                    idx2.append(nodes[pair]["n2"])
+                    idx1[-1].append(nodes[pair]["n1"])
+                    idx2[-1].append(nodes[pair]["n2"])
 
     if not coarse_grained:
-        score, cost, [idx1, idx2] = __align_rings(p1, p2, n1, n2, idx1, idx2,
-                                                  mapping, dist1, dist2,
-                                                  dist_tol)
-    else:
-        idx1 += n1
-        idx2 += n2
+        score = 0.0
+        cost = 0.0
+        scorecost = float("-inf")
+        aln1 = []
+        aln2 = []
 
-    return score, cost, [idx1, idx2]
+        for i in xrange(len(idx1)):
+            s, c, [tmp1, tmp2] = __align_rings(p1, p2, n1[i], n2[i],
+                                               idx1[i], idx2[i],
+                                               mapping, dist1, dist2,
+                                               dist_tol)
+            if (s - c > scorecost) or (s - c == scorecost and s > score):
+                score = s
+                cost = c
+                scorecost = s - c
+                aln1 = tmp1[:]
+                aln2 = tmp2[:]
+
+    else:
+        aln1 = idx1[0]
+        aln2 = idx2[0]
+        aln1 += n1
+        aln2 += n2
+
+    return score, cost, [aln1, aln2]
 
 
 def similarity(p1, p2, dist_tol=0.0, coarse_grained=True):
