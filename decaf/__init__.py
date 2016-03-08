@@ -14,7 +14,7 @@ warnings.simplefilter('always', UserWarning)
 #SMARTS definition of pharmacophore points:
 PHARS = {"HH": "[#6+0!$(*~[#7,#8,F]),SH0+0v2,s+0,S^3,Cl+0,Br+0,I+0]",  # hydrophobic
          "AR": "[a]",  # aromatic
-         "HA": "[!$([#6,F,Cl,Br,I,o,s,nX3,#7v5,#15v5,#16v4,#16v6,*+1,*+2,*+3])]",   # acceptor  
+         "HA": "[!$([#1,#6,F,Cl,Br,I,o,s,nX3,#7v5,#15v5,#16v4,#16v6,*+1,*+2,*+3])]",   # acceptor  
          "HD": "[!$([#6,H0,-,-2,-3]),$([!H0;#7,#8,#9])]",    # donor
          "R": "[r]"}    # ring
 
