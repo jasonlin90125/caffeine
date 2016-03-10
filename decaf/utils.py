@@ -901,7 +901,7 @@ def combine_pharmacophores(p1, p2, dist_tol=0.0, freq_cutoff=0.0):
                             freq2 = p2.nodes[added[1][n1]]["freq"] + \
                                     p2.nodes[added[1][n2]]["freq"]
                         else:
-                            d1 = 0
+                            d2 = 0
                             freq2 = 0
                         dist = (d1 * freq1 + d2 * freq2) / (freq1 + freq2)
 
