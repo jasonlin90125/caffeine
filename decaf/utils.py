@@ -885,7 +885,7 @@ def combine_pharmacophores(p1, p2, dist_tol=0.0, freq_cutoff=0.0):
         nearest_node = np.zeros((comp_nr, comp_nr), dtype=int)
         for i in xrange(comp_nr):
             for j in xrange(i):
-                shortes_dist = float("inf")
+                shortest_dist = float("inf")
                 nearest_nodes = [None, None]
                 for n1 in components[i]:
                     for n2 in components[j]:
@@ -905,10 +905,10 @@ def combine_pharmacophores(p1, p2, dist_tol=0.0, freq_cutoff=0.0):
                             freq2 = 0
                         dist = (d1 * freq1 + d2 * freq2) / (freq1 + freq2)
 
-                        if dist < shortes_dist:
-                            shortes_dist = dist
+                        if dist < shortest_dist:
+                            shortest_dist = dist
                             nearest_nodes = [n1, n2]
-                comp_dist[i, j] = comp_dist[j, i] = dist
+                comp_dist[i, j] = comp_dist[j, i] = shortest_dist
                 nearest_node[i, j] = nearest_nodes[1]
                 nearest_node[j, i] = nearest_nodes[0]
 
@@ -1006,24 +1006,59 @@ def filter_nodes(p, freq_range=(0.0, 1.0), rm_outside=True):
     if not isinstance(rm_outside, bool):
         raise TypeError("rm_outside should be bool!")
 
+    dist = distances(p)
+    dist[p.edges > 0] = p.edges[p.edges > 0]
     new_p = p.copy()
 
     freq_range = [i * p.molecules for i in freq_range]
-    if freq_range == [0.0, p.molecules] and rm_outside:
-        return new_p
-
-    elif rm_outside:
+    if rm_outside:
         for n in xrange(p.numnodes - 1, -1, -1):
             if new_p.nodes[n]["freq"] < freq_range[0] or \
                new_p.nodes[n]["freq"] > freq_range[1]:
                 new_p.remove_node(n)
-        return new_p
+                dist = np.delete(np.delete(dist, n, 0), n, 1)
+
     else:
         for n in xrange(p.numnodes - 1, -1, -1):
             if new_p.nodes[n]["freq"] >= freq_range[0] or \
                new_p.nodes[n]["freq"] <= freq_range[1]:
                 new_p.remove_node(n)
-        return new_p
+                dist = np.delete(np.delete(dist, n, 0), n, 1)
+
+    #check if new pharmacophore is connected
+    components = split_components(new_p)
+    comp_nr = len(components)
+
+    if comp_nr > 1:
+        # shortest distances between components
+        comp_dist = np.zeros((comp_nr, comp_nr)) + float("inf")
+
+        # nearest_node[i, j] == id of node from component j, that is nearest to
+        # component i
+        nearest_node = np.zeros((comp_nr, comp_nr), dtype=int)
+        for i in xrange(comp_nr):
+            for j in xrange(i):
+                shortest_dist = float("inf")
+                nearest_nodes = [None, None]
+                for n1 in components[i]:
+                    for n2 in components[j]:
+                        if dist[n1, n2] < shortest_dist:
+                            shortest_dist = dist[n1, n2]
+                            nearest_nodes = [n1, n2]
+                comp_dist[i, j] = comp_dist[j, i] = shortest_dist
+                nearest_node[i, j] = nearest_nodes[1]
+                nearest_node[j, i] = nearest_nodes[0]
+
+        shortest_connection = np.argmin(comp_dist, axis=1)
+
+        # connect components
+        for i in xrange(comp_nr):
+            j = shortest_connection[i]
+            n1 = nearest_node[i, j]
+            n2 = nearest_node[j, i]
+            new_p.add_edge(n1, n2, comp_dist[i, j])
+
+    return new_p
 
 
 def spring_layout(p, c0=0.2, c1=1.0):
