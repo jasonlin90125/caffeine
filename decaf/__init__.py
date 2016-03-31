@@ -249,7 +249,8 @@ class Pharmacophore(object):
         """
         from pickle import dump
         try:
-            dump(self, open(filename, "wb"))
+            with open(filename, "wb") as f:
+                dump(self, f)
         except IOError as e:
             raise IOError("Cant write file!", e)
 
