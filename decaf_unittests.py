@@ -123,6 +123,8 @@ class PharmacophoreTests(unittest.TestCase):
         self.assertEqual(self.phar.title, p_copy.title)
         self.assertEqual(self.phar.molecules, p_copy.molecules)
         remove(filename)
+        self.assertRaises(IOError, Pharmacophore.read, filename)
+        self.assertRaises(IOError, Pharmacophore.save, p_copy, "nonexist/"+filename)
 
     def testValidation(self):
         from decaf import Pharmacophore

@@ -266,6 +266,7 @@ class Pharmacophore(object):
         """
         from pickle import load
         try:
-            return load(open(filename, "rb"))
+            with open(filename, "rb") as f:
+                return load(f)
         except IOError as e:
             raise IOError("Cant read file!", e)
