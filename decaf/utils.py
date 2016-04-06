@@ -903,7 +903,10 @@ def combine_pharmacophores(p1, p2, dist_tol=0.0, freq_cutoff=0.0):
                         else:
                             d2 = 0
                             freq2 = 0
-                        dist = (d1 * freq1 + d2 * freq2) / (freq1 + freq2)
+                        if (freq1 + freq2) == 0:
+                            dist = float("inf")
+                        else:
+                            dist = (d1 * freq1 + d2 * freq2) / (freq1 + freq2)
 
                         if dist < shortest_dist:
                             shortest_dist = dist
