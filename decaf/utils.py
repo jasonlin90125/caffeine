@@ -912,17 +912,22 @@ def combine_pharmacophores(p1, p2, dist_tol=0.0, freq_cutoff=0.0):
                             shortest_dist = dist
                             nearest_nodes = [n1, n2]
                 comp_dist[i, j] = comp_dist[j, i] = shortest_dist
-                nearest_node[i, j] = nearest_nodes[1]
-                nearest_node[j, i] = nearest_nodes[0]
+                if shortest_dist < float('inf'):
+                    nearest_node[i, j] = nearest_nodes[1]
+                    nearest_node[j, i] = nearest_nodes[0]
 
-        shortest_connection = np.argmin(comp_dist, axis=1)
+        sorted_connections = np.unravel_index(comp_dist.argsort(axis=None),
+                                              comp_dist.shape)
 
         # connect components
-        for i in xrange(comp_nr):
-            j = shortest_connection[i]
+        for i, j in zip(*sorted_connections):
             n1 = nearest_node[i, j]
             n2 = nearest_node[j, i]
             new_p.add_edge(n1, n2, comp_dist[i, j])
+
+            # check if graph is already connected
+            if len(split_components(new_p)) == 1:
+                break
 
     return new_p
 

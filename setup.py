@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name='DeCAF',
-    version='1.0.5',
+    version='1.0.6',
     description='Discrimination, Comparison, Alignment tool for small molecules',
     author='Marta M. Stepniewska',
     author_email='martasd@ibb.waw.pl',
