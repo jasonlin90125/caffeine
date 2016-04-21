@@ -337,13 +337,14 @@ def __modular_product(p1, p2, dist1=None, dist2=None, dist_tol=0):
 
     for i in xrange(len(rings1)):
         for j in xrange(len(rings2)):
-            if -1 <= len(members1[i]) - len(members2[j]) <= 1:
-            # force similar ring size
-                weighted_freq, _ = compare_nodes(rings1[i], rings2[j])
-                if weighted_freq > 0.0:
-                    nodes.append({"n1": p1.numnodes+i, "n2": p2.numnodes+j,
-                                  "members": [members1[i], members2[j]]})
-                    scores.append(weighted_freq)
+            # do not look at the number of nodes in the ring
+            # it would be faster, but it results in wrong alignemtn for complex
+            # ring systems created from multiple molecules
+            weighted_freq, _ = compare_nodes(rings1[i], rings2[j])
+            if weighted_freq > 0.0:
+                nodes.append({"n1": p1.numnodes+i, "n2": p2.numnodes+j,
+                              "members": [members1[i], members2[j]]})
+                scores.append(weighted_freq)
 
     n = len(nodes)
     scores = np.array(scores)
