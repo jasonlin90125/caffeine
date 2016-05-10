@@ -230,7 +230,9 @@ class UtilsTests(unittest.TestCase):
         self.smiles = ["Cc1c(N)cccc1C(=O)N2CCCC2",
                        "Cc1c(NCCCCC(=O)O)cccc1C(=O)N2CCCC2",
                        "Cc1c(N)ccc(F)c1C(=O)N2CCCC2",
-                       "NCCCCC(=O)O"]
+                       "NCCCCC(=O)O",
+                       "O=C(O)CC2CCCC(CC1CCCCC1)C2C(=O)O",
+                       "O=C(O)CC2CCCC(CCC1CCCCC1)C2C(=O)O"]
         self.phars = [ob.phar_from_mol(readstring("smi", s)) for s in
                       self.smiles]
 
@@ -303,8 +305,8 @@ class UtilsTests(unittest.TestCase):
             self.assertEqual(scores[i][i], 2.*best_mapped[i][i])
             self.assertEqual(costs[i][i], 0)
             for j in xrange(i):
-                self.assertEqual(scores[i][j], scores[j][i])
-                self.assertEqual(costs[i][j], costs[j][i])
+                self.assertAlmostEqual(scores[i][j], scores[j][i])
+                self.assertAlmostEqual(costs[i][j], costs[j][i])
                 self.assertGreaterEqual(scores[i][j], 0)
                 self.assertLessEqual(scores[i][j],
                                      2.*min(self.phars[i].numnodes,
@@ -339,8 +341,8 @@ class UtilsTests(unittest.TestCase):
         for i in xrange(len(self.phars)):
             self.assertEqual(real[i][i], self.phars[i].numnodes)
             for j in xrange(i):
-                self.assertEqual(real[i][j], expected[j][i])
-                self.assertEqual(real[i][j], real[j][i])
+                self.assertAlmostEqual(real[i][j], expected[j][i])
+                self.assertAlmostEqual(real[i][j], real[j][i])
 
     def testInclusiveSimilarity(self):
         from decaf.utils import inclusive_similarity

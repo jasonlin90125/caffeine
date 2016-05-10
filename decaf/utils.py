@@ -594,6 +594,76 @@ def __align_rings(p1, p2, n1, n2, idx1, idx2, mapping=None, dist1=None,
     return score, cost, [idx1, idx2]
 
 
+def __add_neighbours(p1, p2, n1, n2, idx1, idx2, mapping=None,
+                     dist_tol=0, pairs=None):
+    """Try to extend alignment by adding nodes connected to already aligned
+    parts of pharmacophores. In most cases there is nothing to add, but
+    sometimes differences beteween scaffolds of the molecules (rings vs
+    linear fragments) result in incomplete alignment after rings decompression.
+
+    Args:
+       p1, p2 (Pharmacophore): models to align
+       n1, n2 (list of ints): nodes to align
+       idx1, idx2 (list of ints): lists of aligned nodes
+       mapping (numpy array, optional): array describing nodes compatibility
+
+    Returns:
+       float: unnormalized similarity score
+       float: edge length differences cost
+       2D list: list of two lists representing matched nodes
+    """
+
+    if mapping is None:
+        mapping = np.zeros((p1.numnodes, p2.numnodes))
+
+        for i in xrange(p1.numnodes):
+            for j in xrange(p2.numnodes):
+                weighted_freq, _ = compare_nodes(p1.nodes[i], p2.nodes[j])
+                if weighted_freq > 0.0:
+                    mapping[i][j] = weighted_freq
+
+    if pairs is None:
+        pairs = []
+
+    for i1, i2 in zip(idx1, idx2):
+        neighbours1 = []
+        for node in reversed(np.where(p1.edges[i1, n1] > 0)[0]):
+            neighbours1.append(n1[node])
+            n1.remove(n1[node])
+
+        neighbours2 = []
+        for node in reversed(np.where(p2.edges[i2, n2] > 0)[0]):
+            neighbours2.append(n2[node])
+            n2.remove(n2[node])
+
+        # find compatible neighbours
+        for neigh1 in neighbours1:
+            for neigh2 in neighbours2:
+                if (mapping[neigh1, neigh2] > 0):
+                    dist_diff = (p1.edges[i1, neigh1] - p2.edges[i2, neigh2])
+                    if (-dist_tol <= dist_diff <= dist_tol):
+                        pairs.append((neigh1, neigh2))
+
+    score = np.sum(mapping[idx1, idx2])
+    cost = np.sum(np.abs(p1.edges[idx1][:, idx1] - p2.edges[idx2][:, idx2])) / 2.0
+    aln = [idx1[:], idx2[:]]
+
+    for i, pair in enumerate(pairs):
+        compatible = [p for p in pairs[i+1:] if
+                      (p[0] != pair[0]) and (p[1] != pair[1])]
+
+        s, c, (aln1, aln2) = __add_neighbours(p1, p2, n1[:], n2[:],
+                                              idx1+[pair[0]], idx2+[pair[1]],
+                                              mapping, dist_tol, compatible)
+
+        if (s - c > score - cost) or (s - c == score - cost and s > score):
+            score = s
+            cost = c
+            aln = [aln1[:], aln2[:]]
+
+    return score, cost, aln
+
+
 def map_pharmacophores(p1, p2, dist_tol=0.0, coarse_grained=True):
     """Find best common substructure match for two Pharmacophores.
 
@@ -708,6 +778,17 @@ def map_pharmacophores(p1, p2, dist_tol=0.0, coarse_grained=True):
                 scorecost = s - c
                 aln1 = tmp1[:]
                 aln2 = tmp2[:]
+
+            remaining1 = [node for node in xrange(p1.numnodes)
+                          if node not in aln1]
+
+            remaining2 = [node for node in xrange(p2.numnodes)
+                          if node not in aln2]
+
+            score, cost, (aln1, aln2) = __add_neighbours(p1, p2, remaining1,
+                                                         remaining2, aln1[:],
+                                                         aln2[:], mapping,
+                                                         dist_tol)
 
     else:
         aln1 = idx1[0]
