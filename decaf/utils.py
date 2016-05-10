@@ -517,7 +517,7 @@ def __align_rings(p1, p2, n1, n2, idx1, idx2, mapping=None, dist1=None,
     old_len = len(idx1)
 
     for i in xrange(old_len):
-        weighted_freq, _ = compare_nodes(p1.nodes[idx1[i]], p2.nodes[idx2[i]])
+        weighted_freq = mapping[idx1[i], idx2[i]]
         assert weighted_freq > 0, "wrong alignment given"
         nodes.append({"n1": idx1[i], "n2": idx2[i]})
         scores.append(weighted_freq)
@@ -537,8 +537,7 @@ def __align_rings(p1, p2, n1, n2, idx1, idx2, mapping=None, dist1=None,
             compatible = np.array(range(len(pairs1)))
 
         for i in compatible:
-            weighted_freq, _ = compare_nodes(p1.nodes[pairs1[i]],
-                                             p2.nodes[pairs2[i]])
+            weighted_freq = mapping[pairs1[i], pairs2[i]]
             assert weighted_freq > 0, "wrong possible matches"
             nodes.append({"n1": pairs1[i], "n2": pairs2[i]})
             scores.append(weighted_freq)
@@ -634,7 +633,7 @@ def map_pharmacophores(p1, p2, dist_tol=0.0, coarse_grained=True):
 
     for i in xrange(p1.numnodes):
         for j in xrange(p2.numnodes):
-            weighted_freq, types = compare_nodes(p1.nodes[i], p2.nodes[j])
+            weighted_freq, _ = compare_nodes(p1.nodes[i], p2.nodes[j])
             if weighted_freq > 0.0:
                 mapping[i][j] = weighted_freq
 
@@ -668,7 +667,7 @@ def map_pharmacophores(p1, p2, dist_tol=0.0, coarse_grained=True):
                 score = s
                 cost = c
                 scorecost = s - c
-    
+
                 idx1 = [[]]
                 idx2 = [[]]
                 n1 = [[]]
