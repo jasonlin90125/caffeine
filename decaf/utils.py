@@ -625,6 +625,20 @@ def __add_neighbours(p1, p2, n1, n2, idx1, idx2, mapping=None,
     if pairs is None:
         pairs = []
 
+    def is_compatible(pair1, pair2):
+        if (pair1[0] == pair2[0]) or (pair1[1] == pair1[1]):
+            return False
+        if (p1.edges[pair1[0], pair2[0]] != 0) and \
+           (p2.edges[pair1[1], pair2[1]] != 0):
+            dist_diff = math.fabs((p1.edges[pair1[0], pair2[0]] -
+                                   p2.edges[pair1[1], pair2[1]]))
+            if dist_diff <= dist_tol:
+                return True
+            else:
+                return False
+        else:
+            return True
+
     for i1, i2 in zip(idx1, idx2):
         neighbours1 = []
         for node in reversed(np.where(p1.edges[i1, n1] > 0)[0]):
@@ -660,8 +674,7 @@ def __add_neighbours(p1, p2, n1, n2, idx1, idx2, mapping=None,
     aln = [idx1[:], idx2[:]]
 
     for i, pair in enumerate(pairs):
-        compatible = [p for p in pairs[i+1:] if
-                      (p[0] != pair[0]) and (p[1] != pair[1])]
+        compatible = [p for p in pairs[i+1:] if is_compatible(pair, p)]
 
         s, c, (aln1, aln2) = __add_neighbours(p1, p2, n1[:], n2[:],
                                               idx1+[pair[0]], idx2+[pair[1]],
@@ -846,7 +859,6 @@ def similarity(p1, p2, dist_tol=0.0, coarse_grained=True):
 
     if p1.numnodes == 0 and p2.numnodes == 0:
         warnings.warn("Pharmacophores are empty!")
-
 
     score, cost, _ = map_pharmacophores(p1, p2, dist_tol, coarse_grained)
     a1 = 0.0
