@@ -600,6 +600,9 @@ def __add_neighbours(p1, p2, n1, n2, idx1, idx2, mapping=None,
     parts of pharmacophores. In most cases there is nothing to add, but
     sometimes differences beteween scaffolds of the molecules (rings vs
     linear fragments) result in incomplete alignment after rings decompression.
+    Also, pairs of neighbours incompatible with global constraints used
+    in coarse-grained alignment (to speed-up the procedure) will be added here.
+
 
     Args:
        p1, p2 (Pharmacophore): models to align
@@ -697,7 +700,7 @@ def map_pharmacophores(p1, p2, dist_tol=0.0, coarse_grained=True):
          threshold
        coarse_grained (bool, optional): if True, find alignment for compressed
          ring systems. Otherwise align ring members afer finding coarse-grained
-         alignment.
+         alignment and try to add neighbours to already aligned nodes.
 
     Returns:
        float: unnormalized similarity score
@@ -833,7 +836,7 @@ def similarity(p1, p2, dist_tol=0.0, coarse_grained=True):
          threshold
        coarse_grained (bool, optional): if True, find alignment for compressed
          ring systems. Otherwise align ring members afer finding coarse-grained
-         alignment.
+         alignment and try to add neighbours to already aligned nodes.
 
 
     Returns:
@@ -1047,7 +1050,7 @@ def inclusive_similarity(p1, p2, dist_tol=0.0, coarse_grained=True):
          threshold
        coarse_grained (bool, optional): if True, find alignment for compressed
          ring systems. Otherwise align ring members afer finding coarse-grained
-         alignment.
+         alignment and try to add neighbours to already aligned nodes.
 
 
     Returns:
