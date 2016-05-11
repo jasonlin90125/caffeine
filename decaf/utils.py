@@ -640,8 +640,13 @@ def __add_neighbours(p1, p2, n1, n2, idx1, idx2, mapping=None,
         for neigh1 in neighbours1:
             for neigh2 in neighbours2:
                 if (mapping[neigh1, neigh2] > 0):
-                    dist_diff = (p1.edges[i1, neigh1] - p2.edges[i2, neigh2])
-                    if (-dist_tol <= dist_diff <= dist_tol):
+                    dist_diff = np.abs(p1.edges[idx1, neigh1] -
+                                       p2.edges[idx2, neigh2])
+
+                    connected = np.where(p1.edges[idx1, neigh1] *
+                                         p2.edges[idx2, neigh2])
+                    max_cost = np.max(dist_diff[connected])
+                    if (max_cost <= dist_tol):
                         pairs.append((neigh1, neigh2))
 
     score = np.sum(mapping[idx1, idx2])
