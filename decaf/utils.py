@@ -645,7 +645,13 @@ def __add_neighbours(p1, p2, n1, n2, idx1, idx2, mapping=None,
                         pairs.append((neigh1, neigh2))
 
     score = np.sum(mapping[idx1, idx2])
-    cost = np.sum(np.abs(p1.edges[idx1][:, idx1] - p2.edges[idx2][:, idx2])) / 2.0
+
+    dist_diff = np.abs(p1.edges[idx1][:, idx1] - p2.edges[idx2][:, idx2])
+    connected = np.where(p1.edges[idx1][:, idx1] * p2.edges[idx2][:, idx2])
+    if len(connected[0]) > 0:
+        assert np.max(dist_diff[connected]) <= dist_tol, "cost too high"
+    cost = np.sum(dist_diff[connected]) / 2.0
+
     aln = [idx1[:], idx2[:]]
 
     for i, pair in enumerate(pairs):
@@ -793,8 +799,8 @@ def map_pharmacophores(p1, p2, dist_tol=0.0, coarse_grained=True):
     else:
         aln1 = idx1[0]
         aln2 = idx2[0]
-        aln1 += n1
-        aln2 += n2
+        aln1 += n1[0]
+        aln2 += n2[0]
 
     return score, cost, [aln1, aln2]
 
