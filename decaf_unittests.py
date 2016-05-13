@@ -291,26 +291,41 @@ class UtilsTests(unittest.TestCase):
         scores = [[0]*len(self.phars) for i in xrange(len(self.phars))]
         costs = [[0]*len(self.phars) for i in xrange(len(self.phars))]
         best_mapped = [[0]*len(self.phars) for i in xrange(len(self.phars))]
-        for i in xrange(len(self.phars)):
-            for j in xrange(len(self.phars)):
-                s, c, m = map_pharmacophores(self.phars[i], self.phars[j],
-                                             coarse_grained=False)
-                scores[i][j] = s
-                costs[i][j] = c
-                self.assertEqual(len(m[0]), len(m[1]))
-                best_mapped[i][j] = len(m[0])
 
-        for i in xrange(len(self.phars)):
-            self.assertEqual(best_mapped[i][i], self.phars[i].numnodes)
-            self.assertEqual(scores[i][i], 2.*best_mapped[i][i])
-            self.assertEqual(costs[i][i], 0)
-            for j in xrange(i):
-                self.assertAlmostEqual(scores[i][j], scores[j][i])
-                self.assertAlmostEqual(costs[i][j], costs[j][i])
-                self.assertGreaterEqual(scores[i][j], 0)
-                self.assertLessEqual(scores[i][j],
-                                     2.*min(self.phars[i].numnodes,
-                                            self.phars[j].numnodes))
+        for d in [0.0, 1.0]:
+            for i in xrange(len(self.phars)):
+                for j in xrange(len(self.phars)):
+
+                    s, c, m = map_pharmacophores(self.phars[i], self.phars[j],
+                                                 dist_tol=d,
+                                                 coarse_grained=False)
+                    scores[i][j] = s
+                    costs[i][j] = c
+                    self.assertEqual(len(m[0]), len(m[1]))
+                    best_mapped[i][j] = len(m[0])
+
+                    s2, c2, m2 = map_pharmacophores(self.phars[i],
+                                                    self.phars[j],
+                                                    dist_tol=d,
+                                                    coarse_grained=False,
+                                                    add_neighbours=True)
+
+                    self.assertGreaterEqual(s2, s)
+                    self.assertGreaterEqual(c2, c)
+                    self.assertEqual(len(m2[0]), len(m2[1]))
+                    self.assertGreaterEqual(len(m2[0]), len(m[0]))
+
+            for i in xrange(len(self.phars)):
+                self.assertEqual(best_mapped[i][i], self.phars[i].numnodes)
+                self.assertEqual(scores[i][i], 2.*best_mapped[i][i])
+                self.assertEqual(costs[i][i], 0)
+                for j in xrange(i):
+                    self.assertAlmostEqual(scores[i][j], scores[j][i])
+                    self.assertAlmostEqual(costs[i][j], costs[j][i])
+                    self.assertGreaterEqual(scores[i][j], 0)
+                    self.assertLessEqual(scores[i][j],
+                                         2.*min(self.phars[i].numnodes,
+                                                self.phars[j].numnodes))
 
     def testSame(self):
         from rdkit.Chem import MolFromSmiles
@@ -414,9 +429,16 @@ class UtilsTests(unittest.TestCase):
             self.assertRaises(TypeError, f, 0, p)
             self.assertRaises(TypeError, f, p, p, dist_tol="1")
             self.assertRaises(ValueError, f, p, p, dist_tol=-1)
+
+        for f in [mp, similarity]:
+            self.assertRaises(TypeError, f, p, p, coarse_grained="1")
+            self.assertRaises(TypeError, f, p, p, coarse_grained=False,
+                              add_neighbours="1")
+
         self.assertRaises(TypeError, cp, p, p, freq_cutoff="1")
         self.assertRaises(ValueError, cp, p, p, freq_cutoff=-1)
         self.assertRaises(ValueError, cp, p, p, freq_cutoff=2)
+        self.assertRaises(TypeError, cp, p, p, add_neighbours="1")
 
         self.assertRaises(TypeError, filter_nodes, 0)
         self.assertRaises(TypeError, filter_nodes, p, freq_range="0, 1")
