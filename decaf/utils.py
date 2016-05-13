@@ -594,8 +594,8 @@ def __align_rings(p1, p2, n1, n2, idx1, idx2, mapping=None, dist1=None,
     return score, cost, [idx1, idx2]
 
 
-def __add_neighbours(p1, p2, n1, n2, idx1, idx2, mapping=None,
-                     dist_tol=0, pairs=None):
+def __add_neighbours(p1, p2, n1, n2, idx1, idx2, mapping=None, dist1=None,
+                     dist2=None, dist_tol=0, pairs=None):
     """Try to extend alignment by adding nodes connected to already aligned
     parts of pharmacophores. In most cases there is nothing to add, but
     sometimes differences beteween scaffolds of the molecules (rings vs
@@ -624,6 +624,13 @@ def __add_neighbours(p1, p2, n1, n2, idx1, idx2, mapping=None,
                 weighted_freq, _ = compare_nodes(p1.nodes[i], p2.nodes[j])
                 if weighted_freq > 0.0:
                     mapping[i][j] = weighted_freq
+    if dist1 is None:
+        dist1 = distances(p1)
+        dist1[p1.edges > 0] = p1.edges[p1.edges > 0]
+
+    if dist2 is None:
+        dist2 = distances(p2)
+        dist2[p2.edges > 0] = p2.edges[p2.edges > 0]
 
     if pairs is None:
         pairs = []
@@ -657,19 +664,20 @@ def __add_neighbours(p1, p2, n1, n2, idx1, idx2, mapping=None,
         for neigh1 in neighbours1:
             for neigh2 in neighbours2:
                 if (mapping[neigh1, neigh2] > 0):
-                    dist_diff = np.abs(p1.edges[idx1, neigh1] -
-                                       p2.edges[idx2, neigh2])
+                    dist_diff = np.abs(dist1[idx1, neigh1] -
+                                       dist2[idx2, neigh2])
 
-                    connected = np.where(p1.edges[idx1, neigh1] *
+                    # there is edge between nodes in at least one of phars
+                    connected = np.where(p1.edges[idx1, neigh1] +
                                          p2.edges[idx2, neigh2])
                     max_cost = np.max(dist_diff[connected])
                     if (max_cost <= dist_tol):
                         pairs.append((neigh1, neigh2))
 
     score = np.sum(mapping[idx1, idx2])
+    dist_diff = np.abs(dist1[idx1][:, idx1] - dist2[idx2][:, idx2])
+    connected = np.where(p1.edges[idx1][:, idx1] + p2.edges[idx2][:, idx2])
 
-    dist_diff = np.abs(p1.edges[idx1][:, idx1] - p2.edges[idx2][:, idx2])
-    connected = np.where(p1.edges[idx1][:, idx1] * p2.edges[idx2][:, idx2])
     if len(connected[0]) > 0:
         assert np.max(dist_diff[connected]) <= dist_tol, "cost too high"
     cost = np.sum(dist_diff[connected]) / 2.0
@@ -681,7 +689,7 @@ def __add_neighbours(p1, p2, n1, n2, idx1, idx2, mapping=None,
 
         s, c, (aln1, aln2) = __add_neighbours(p1, p2, n1[:], n2[:],
                                               idx1+[pair[0]], idx2+[pair[1]],
-                                              mapping, dist_tol, compatible)
+                                              mapping, dist1, dist2, dist_tol, compatible)
 
         if (s - c > score - cost) or (s - c == score - cost and s > score):
             score = s
@@ -691,7 +699,8 @@ def __add_neighbours(p1, p2, n1, n2, idx1, idx2, mapping=None,
     return score, cost, aln
 
 
-def map_pharmacophores(p1, p2, dist_tol=0.0, coarse_grained=True):
+def map_pharmacophores(p1, p2, dist_tol=0.0, coarse_grained=True,
+                       add_neighbours=False):
     """Find best common substructure match for two Pharmacophores.
 
     Args:
@@ -701,6 +710,9 @@ def map_pharmacophores(p1, p2, dist_tol=0.0, coarse_grained=True):
        coarse_grained (bool, optional): if True, find alignment for compressed
          ring systems. Otherwise align ring members afer finding coarse-grained
          alignment and try to add neighbours to already aligned nodes.
+       add_neighbours (bool, optional): if True, try to extend fine-grained
+         alignment by adding neighbours of already aligned nodes. This option
+         is ignored if coarse_grained is set to True.
 
     Returns:
        float: unnormalized similarity score
@@ -725,6 +737,13 @@ def map_pharmacophores(p1, p2, dist_tol=0.0, coarse_grained=True):
 
     if not isinstance(coarse_grained, bool):
         raise TypeError("coarse_grained must be bool!")
+
+    if not isinstance(add_neighbours, bool):
+        raise TypeError("add_neighbours must be bool!")
+
+    if coarse_grained and add_neighbours:
+        warnings.warn("Neighbours cannot be added to coarse-grained alignment." \
+                      "If you want to add neighbours, use coarse_grained=False")
 
     mapping = np.zeros((p1.numnodes, p2.numnodes))
 
@@ -806,16 +825,18 @@ def map_pharmacophores(p1, p2, dist_tol=0.0, coarse_grained=True):
                 aln1 = tmp1[:]
                 aln2 = tmp2[:]
 
-            remaining1 = [node for node in xrange(p1.numnodes)
-                          if node not in aln1]
+            if add_neighbours:
+                remaining1 = [node for node in xrange(p1.numnodes)
+                              if node not in aln1]
 
-            remaining2 = [node for node in xrange(p2.numnodes)
-                          if node not in aln2]
+                remaining2 = [node for node in xrange(p2.numnodes)
+                              if node not in aln2]
 
-            score, cost, (aln1, aln2) = __add_neighbours(p1, p2, remaining1,
-                                                         remaining2, aln1[:],
-                                                         aln2[:], mapping,
-                                                         dist_tol)
+                score, cost, (aln1, aln2) = __add_neighbours(p1, p2, remaining1,
+                                                             remaining2, aln1[:],
+                                                             aln2[:], mapping,
+                                                             dist1, dist2,
+                                                             dist_tol)
 
     else:
         aln1 = idx1[0]
@@ -826,7 +847,7 @@ def map_pharmacophores(p1, p2, dist_tol=0.0, coarse_grained=True):
     return score, cost, [aln1, aln2]
 
 
-def similarity(p1, p2, dist_tol=0.0, coarse_grained=True):
+def similarity(p1, p2, dist_tol=0.0, coarse_grained=True, add_neighbours=False):
     """Find common part of two Pharmacophores, calculate normalized similarity
     score and edge length differences cost.
 
@@ -837,6 +858,9 @@ def similarity(p1, p2, dist_tol=0.0, coarse_grained=True):
        coarse_grained (bool, optional): if True, find alignment for compressed
          ring systems. Otherwise align ring members afer finding coarse-grained
          alignment and try to add neighbours to already aligned nodes.
+       add_neighbours (bool, optional): if True, try to extend fine-grained
+         alignment by adding neighbours of already aligned nodes. This option
+         is ignored if coarse_grained is set to True.
 
 
     Returns:
@@ -860,10 +884,14 @@ def similarity(p1, p2, dist_tol=0.0, coarse_grained=True):
     if not isinstance(coarse_grained, bool):
         raise TypeError("coarse_grained must be bool!")
 
+    if not isinstance(add_neighbours, bool):
+        raise TypeError("add_neighbours must be bool!")
+
     if p1.numnodes == 0 and p2.numnodes == 0:
         warnings.warn("Pharmacophores are empty!")
 
-    score, cost, _ = map_pharmacophores(p1, p2, dist_tol, coarse_grained)
+    score, cost, _ = map_pharmacophores(p1, p2, dist_tol, coarse_grained,
+                                        add_neighbours)
     a1 = 0.0
     a2 = 0.0
     for n in p1.nodes:
@@ -873,7 +901,8 @@ def similarity(p1, p2, dist_tol=0.0, coarse_grained=True):
     return (score / (a1 + a2)), cost
 
 
-def combine_pharmacophores(p1, p2, dist_tol=0.0, freq_cutoff=0.0):
+def combine_pharmacophores(p1, p2, dist_tol=0.0, freq_cutoff=0.0,
+                           add_neighbours=False):
     """Create new model from Pharmacophores p1 and p2
 
     Find common part of two Pharmacophores, add unique elements and calculate
@@ -885,6 +914,8 @@ def combine_pharmacophores(p1, p2, dist_tol=0.0, freq_cutoff=0.0):
         threshold
       freq_cutoff (float, optional): skip unique nodes with frequencies below
         this threshold
+      add_neighbours (bool, optional): if True, try to extend alignment by
+        adding neighbours of already aligned nodes.
 
     Returns:
        Pharmacophore: combination of p1 and p2
@@ -909,9 +940,13 @@ def combine_pharmacophores(p1, p2, dist_tol=0.0, freq_cutoff=0.0):
     if freq_cutoff < 0 or freq_cutoff > 1:
         raise ValueError("Invalid freq_cutoff! Use value in the range [0,1]")
 
+    if not isinstance(add_neighbours, bool):
+        raise TypeError("add_neighbours must be bool!")
+
     # find common pharmacophore
     _, _, mapped_nodes = map_pharmacophores(p1, p2, dist_tol,
-                                            coarse_grained=False)
+                                            coarse_grained=False,
+                                            add_neighbours=add_neighbours)
     dist1 = distances(p1)
     dist1[p1.edges > 0] = p1.edges[p1.edges > 0]
     dist2 = distances(p2)
@@ -1039,7 +1074,8 @@ def combine_pharmacophores(p1, p2, dist_tol=0.0, freq_cutoff=0.0):
     return new_p
 
 
-def inclusive_similarity(p1, p2, dist_tol=0.0, coarse_grained=True):
+def inclusive_similarity(p1, p2, dist_tol=0.0, coarse_grained=True,
+                         add_neighbours=False):
     """Find common part of two Pharmacophores and calculate what fractions of
     both models it contains. E.g. if p1 is a substructure of p2, function will
     return (1.0, s, c), where s<=1 and c>=0.
@@ -1051,6 +1087,9 @@ def inclusive_similarity(p1, p2, dist_tol=0.0, coarse_grained=True):
        coarse_grained (bool, optional): if True, find alignment for compressed
          ring systems. Otherwise align ring members afer finding coarse-grained
          alignment and try to add neighbours to already aligned nodes.
+       add_neighbours (bool, optional): if True, try to extend fine-grained
+         alignment by adding neighbours of already aligned nodes. This option
+         is ignored if coarse_grained is set to True.
 
 
     Returns:
@@ -1066,7 +1105,7 @@ def inclusive_similarity(p1, p2, dist_tol=0.0, coarse_grained=True):
         raise TypeError("Expected Pharmacophore, got %s instead" %
                         type(p2).__name__)
 
-    if not isinstance(dist_tol, int) and not isinstance(dist_tol, float):
+    if not isinstance(dist_tol, int) and not isinstance(dist_tol,  float):
         raise TypeError("dist_tol must be float or int!")
 
     if dist_tol < 0:
@@ -1075,7 +1114,11 @@ def inclusive_similarity(p1, p2, dist_tol=0.0, coarse_grained=True):
     if not isinstance(coarse_grained, bool):
         raise TypeError("coarse_grained must be bool!")
 
-    score, cost, _ = map_pharmacophores(p1, p2, dist_tol, coarse_grained)
+    if not isinstance(add_neighbours, bool):
+        raise TypeError("add_neighbours must be bool!")
+
+    score, cost, _ = map_pharmacophores(p1, p2, dist_tol, coarse_grained,
+                                        add_neighbours)
     a1 = 0.0
     a2 = 0.0
     m1 = p1.molecules
