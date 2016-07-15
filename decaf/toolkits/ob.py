@@ -9,7 +9,7 @@ from collections import deque
 import math
 
 
-PATTERNS = {phar: pybel.Smarts(smarts) for (phar, smarts) in PHARS.iteritems()}
+PATTERNS = {phar: pybel.Smarts(smarts) for (phar, smarts) in PHARS.items()}
 
 
 def __count_bonds(a1, a2, exclude):
@@ -47,8 +47,8 @@ def phar_from_mol(ligand):
                         "%s instead" % type(ligand).__name__)
 
     matches = {}
-    for (phar, pattern) in PATTERNS.iteritems():
-        atoms = zip(*pattern.findall(ligand))
+    for (phar, pattern) in PATTERNS.items():
+        atoms = list(zip(*pattern.findall(ligand)))
         if len(atoms) > 0:
             matches[phar] = list(atoms[0])
         else:
@@ -57,7 +57,7 @@ def phar_from_mol(ligand):
 
     nodes = []
     idx = 0
-    for (phar, atoms) in matches.iteritems():
+    for (phar, atoms) in matches.items():
         for atom in atoms:
             if atom in points:
                 nodes[points[atom]]["type"][phar] = 1.0
@@ -70,11 +70,11 @@ def phar_from_mol(ligand):
     edges = np.zeros((idx, idx))
 
     keys = sorted(points.keys())
-    for i in xrange(len(keys)):
-        for j in xrange(i):
+    for i in range(len(keys)):
+        for j in range(i):
             dist = float(__count_bonds(ligand.atoms[keys[i]-1].OBAtom,
                          ligand.atoms[keys[j]-1].OBAtom,
-                         [keys[k] for k in xrange(len(keys)) if
+                         [keys[k] for k in range(len(keys)) if
                           k not in [i, j]]))
             if dist > -1:
                 edges[points[keys[i]], points[keys[j]]] = dist
@@ -95,17 +95,17 @@ def layout(p):
 
     positions = np.zeros((p.numnodes, 2))
     m = pybel.Molecule(ob.OBMol())
-    for i in xrange(p.numnodes):
+    for i in range(p.numnodes):
         m.OBMol.NewAtom()
     idx = p.numnodes + 1
-    for i in xrange(p.numnodes):
-        for j in xrange(i):
+    for i in range(p.numnodes):
+        for j in range(i):
             if p.edges[i, j] > 0:
                 tmp = int(math.ceil(p.edges[i, j])) - 1
                 prev = i + 1
 
                 #add invisible atoms to get right distance
-                for k in xrange(tmp):
+                for k in range(tmp):
                     atom = m.OBMol.NewAtom(idx)
                     atom.SetHyb(1)
                     m.OBMol.AddBond(prev, idx, 1)
@@ -114,7 +114,7 @@ def layout(p):
                 m.OBMol.AddBond(prev, j + 1, 1)
     m.draw(show=False, update=True)
 
-    for i in xrange(p.numnodes):
+    for i in range(p.numnodes):
         positions[i][0] = m.atoms[i].coords[0]
         positions[i][1] = m.atoms[i].coords[1]
     return positions

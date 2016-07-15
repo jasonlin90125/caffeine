@@ -43,8 +43,8 @@ class PharmacophoreTests(unittest.TestCase):
 
     def testCreate(self):
         self.assertEqual(self.phar.numnodes, len(self.phar.nodes))
-        for i in xrange(self.phar.numnodes):
-            for j in xrange(i):
+        for i in range(self.phar.numnodes):
+            for j in range(i):
                 self.assertEqual(self.phar.edges[i, j], self.phar.edges[j, i],
                                  msg=("Array is asymetric! %s!=%s for i=%s, j=%s" %
                                       (self.phar.edges[i, j],
@@ -83,8 +83,8 @@ class PharmacophoreTests(unittest.TestCase):
     def testAddEdge(self):
         l = 1.0
         num = np.sum(self.phar.edges > 0) / 2.0 + 1
-        for idx1 in xrange(self.phar.numnodes):
-            for idx2 in xrange(idx1):
+        for idx1 in range(self.phar.numnodes):
+            for idx2 in range(idx1):
                 if self.phar.edges[idx1, idx2] == 0:
                     self.phar.add_edge(idx1, idx2, l)
 
@@ -96,8 +96,8 @@ class PharmacophoreTests(unittest.TestCase):
 
     def testRemoveEdge(self):
         num = np.sum(self.phar.edges > 0) / 2.0 - 1.0
-        for idx1 in xrange(self.phar.numnodes):
-            for idx2 in xrange(idx1):
+        for idx1 in range(self.phar.numnodes):
+            for idx2 in range(idx1):
                 if self.phar.edges[idx1, idx2] > 0:
 
                     self.phar.remove_edge(idx1, idx2)
@@ -117,8 +117,8 @@ class PharmacophoreTests(unittest.TestCase):
 
         self.assertEqual(self.phar.numnodes, p_copy.numnodes)
         self.assertEqual(self.phar.nodes, p_copy.nodes)
-        for i in xrange(p_copy.numnodes):
-            for j in xrange(p_copy.numnodes):
+        for i in range(p_copy.numnodes):
+            for j in range(p_copy.numnodes):
                 self.assertEqual(self.phar.edges[i, j], p_copy.edges[i, j])
         self.assertEqual(self.phar.title, p_copy.title)
         self.assertEqual(self.phar.molecules, p_copy.molecules)
@@ -185,8 +185,8 @@ class ToolkitsTests(unittest.TestCase):
         self.assertEqual(np.sum(phar.edges > 0) / 2.0, self.numedges)
 
         types = {t: 0 for t in self.types}
-        for i in xrange(phar.numnodes):
-            for t in phar.nodes[i]["type"].keys():
+        for i in range(phar.numnodes):
+            for t in list(phar.nodes[i]["type"].keys()):
                 types[t] += 1
         self.assertEqual(types, self.types)
 
@@ -208,8 +208,8 @@ class ToolkitsTests(unittest.TestCase):
         self.assertEqual(np.sum(phar.edges > 0) / 2.0, self.numedges)
 
         types = {t: 0 for t in self.types}
-        for i in xrange(phar.numnodes):
-            for t in phar.nodes[i]["type"].keys():
+        for i in range(phar.numnodes):
+            for t in list(phar.nodes[i]["type"].keys()):
                 types[t] += 1
         self.assertEqual(types, self.types)
 
@@ -243,8 +243,8 @@ class UtilsTests(unittest.TestCase):
         from decaf.utils import compare_nodes
 
         max_sim = self.phars[0].molecules * 2.0
-        for n1 in xrange(self.phars[0].numnodes):
-            for n2 in xrange(self.phars[0].numnodes):
+        for n1 in range(self.phars[0].numnodes):
+            for n2 in range(self.phars[0].numnodes):
                 s, t = compare_nodes(self.phars[0].nodes[n1],
                                      self.phars[0].nodes[n2])
                 if n1 == n2:
@@ -266,14 +266,14 @@ class UtilsTests(unittest.TestCase):
             edges_id = np.where(p.edges > 0)
             self.assertTrue(((dist - p.edges)[edges_id] <= 0).all())
             self.assertTrue((dist.diagonal() == 0).all())
-            dist[range(p.numnodes), range(p.numnodes)] = 1
+            dist[list(range(p.numnodes)), list(range(p.numnodes))] = 1
             self.assertFalse((dist <= 0).any())
 
     def testDfs(self):
         from decaf.utils import dfs
 
         for p in self.phars:
-            for i in xrange(p.numnodes):
+            for i in range(p.numnodes):
                 visited = dfs(p, i)
                 self.assertEqual(len(visited), p.numnodes)
 
@@ -281,20 +281,20 @@ class UtilsTests(unittest.TestCase):
         from decaf.utils import split_components
 
         for p in self.phars:
-            for i in xrange(p.numnodes):
-                comps = split_components(p, nodes=range(i)+range(i+1, p.numnodes))
+            for i in range(p.numnodes):
+                comps = split_components(p, nodes=list(range(i))+list(range(i+1, p.numnodes)))
                 self.assertLessEqual(len(comps), 2)
 
     def testMap(self):
         from decaf.utils import map_pharmacophores
 
-        scores = [[0]*len(self.phars) for i in xrange(len(self.phars))]
-        costs = [[0]*len(self.phars) for i in xrange(len(self.phars))]
-        best_mapped = [[0]*len(self.phars) for i in xrange(len(self.phars))]
+        scores = [[0]*len(self.phars) for i in range(len(self.phars))]
+        costs = [[0]*len(self.phars) for i in range(len(self.phars))]
+        best_mapped = [[0]*len(self.phars) for i in range(len(self.phars))]
 
         for d in [0.0, 1.0]:
-            for i in xrange(len(self.phars)):
-                for j in xrange(len(self.phars)):
+            for i in range(len(self.phars)):
+                for j in range(len(self.phars)):
 
                     s, c, m = map_pharmacophores(self.phars[i], self.phars[j],
                                                  dist_tol=d,
@@ -315,11 +315,11 @@ class UtilsTests(unittest.TestCase):
                     self.assertEqual(len(m2[0]), len(m2[1]))
                     self.assertGreaterEqual(len(m2[0]), len(m[0]))
 
-            for i in xrange(len(self.phars)):
+            for i in range(len(self.phars)):
                 self.assertEqual(best_mapped[i][i], self.phars[i].numnodes)
                 self.assertEqual(scores[i][i], 2.*best_mapped[i][i])
                 self.assertEqual(costs[i][i], 0)
-                for j in xrange(i):
+                for j in range(i):
                     self.assertAlmostEqual(scores[i][j], scores[j][i])
                     self.assertAlmostEqual(costs[i][j], costs[j][i])
                     self.assertGreaterEqual(scores[i][j], 0)
@@ -334,7 +334,7 @@ class UtilsTests(unittest.TestCase):
 
         phars2 = [rd.phar_from_mol(MolFromSmiles(s)) for s in
                   self.smiles]
-        for i in xrange(len(phars2)):
+        for i in range(len(phars2)):
             score, cost = similarity(self.phars[i], phars2[i])
             self.assertEqual(score, 1.0)
             self.assertEqual(cost, 0.0)
@@ -342,27 +342,27 @@ class UtilsTests(unittest.TestCase):
     def testCombine(self):
         from decaf.utils import map_pharmacophores, combine_pharmacophores
 
-        expected = [[0]*len(self.phars) for i in xrange(len(self.phars))]
-        real = [[0]*len(self.phars) for i in xrange(len(self.phars))]
+        expected = [[0]*len(self.phars) for i in range(len(self.phars))]
+        real = [[0]*len(self.phars) for i in range(len(self.phars))]
 
-        for i in xrange(len(self.phars)):
-            for j in xrange(len(self.phars)):
+        for i in range(len(self.phars)):
+            for j in range(len(self.phars)):
                 _, _, m = map_pharmacophores(self.phars[i], self.phars[j],
                                              coarse_grained=False)
                 expected[i][j] = self.phars[i].numnodes+self.phars[j].numnodes-len(m[0])
                 tmp = combine_pharmacophores(self.phars[i], self.phars[j])
                 real[i][j] = tmp.numnodes
 
-        for i in xrange(len(self.phars)):
+        for i in range(len(self.phars)):
             self.assertEqual(real[i][i], self.phars[i].numnodes)
-            for j in xrange(i):
+            for j in range(i):
                 self.assertAlmostEqual(real[i][j], expected[j][i])
                 self.assertAlmostEqual(real[i][j], real[j][i])
 
     def testInclusiveSimilarity(self):
         from decaf.utils import inclusive_similarity
 
-        for i in xrange(2):
+        for i in range(2):
             s1, s2, _ = inclusive_similarity(self.phars[0], self.phars[i])
             self.assertEqual(s1, 1.0)
 

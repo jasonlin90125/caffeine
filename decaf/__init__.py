@@ -66,7 +66,7 @@ class Pharmacophore(object):
         if not isinstance(nodes, list):
             raise TypeError("Invalid nodes list!")
 
-        for i in xrange(len(nodes)):
+        for i in range(len(nodes)):
             if not isinstance(nodes[i], dict):
                 raise TypeError("Invalid node %s!" % i)
             elif not Pharmacophore.check_node(nodes[i]):

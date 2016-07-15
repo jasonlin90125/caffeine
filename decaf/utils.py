@@ -105,7 +105,7 @@ def get_rings(phar):
         return cycles
 
     rings_members = set()
-    for n in xrange(phar.numnodes):
+    for n in range(phar.numnodes):
         if "R" in phar.nodes[n]["type"]:
             rings_members.add(n)
 
@@ -116,20 +116,20 @@ def get_rings(phar):
 
     # join fused ring systems
     to_del = []
-    for i in xrange(len(cycles)):
-        for j in xrange(i):
+    for i in range(len(cycles)):
+        for j in range(i):
             if len(cycles[i] & cycles[j]) > 0:
                 cycles[i] = (cycles[i] | cycles[j])
                 to_del.append(j)
 
-    for i in xrange(len(cycles)-1, -1, -1):
+    for i in range(len(cycles)-1, -1, -1):
         if i in to_del:
             del cycles[i]
         else:
             cycles[i] = list(cycles[i])
 
     ring_nodes = []
-    for i in xrange(len(cycles)):
+    for i in range(len(cycles)):
         n = float(len(cycles[i]))
         ring_node = {"label": "R"+str(i), "freq": 0.0, "type": {}}
 
@@ -162,19 +162,19 @@ def distances(p):
 
     dist = np.array(p.edges)
 
-    for i in xrange(p.numnodes):
-        for j in xrange(i):
+    for i in range(p.numnodes):
+        for j in range(i):
             if dist[i][j] == 0:
                 dist[i][j] = dist[j][i] = float("inf")
 
-    for i in xrange(len(dist)):
+    for i in range(len(dist)):
         compute = False
-        for j in xrange(i):
+        for j in range(i):
             if dist[i][j] == float("inf"):
                 compute = True
                 break
         if compute:
-            queue = [k for k in xrange(p.numnodes)]
+            queue = [k for k in range(p.numnodes)]
             while queue:
                 queue.sort(key=lambda x: dist[i, x])
                 u = queue[0]
@@ -260,7 +260,7 @@ def split_components(p, nodes=None):
                         type(p).__name__)
 
     if nodes is None:
-        nodes = range(p.numnodes)
+        nodes = list(range(p.numnodes))
     else:
         if not isinstance(nodes, list):
             raise TypeError("Expected nodes list, got %s instead" %
@@ -324,8 +324,8 @@ def __modular_product(p1, p2, dist1=None, dist2=None, dist_tol=0):
     rings_members1 = [node for cycle in members1 for node in cycle]
     rings_members2 = [node for cycle in members2 for node in cycle]
 
-    for i in xrange(p1.numnodes):
-        for j in xrange(p2.numnodes):
+    for i in range(p1.numnodes):
+        for j in range(p2.numnodes):
             if i in rings_members1 and j in rings_members2:
                 # do not align parts of rings
                 # whole rings will be aligned later
@@ -335,8 +335,8 @@ def __modular_product(p1, p2, dist1=None, dist2=None, dist_tol=0):
                 nodes.append({"n1": i, "n2": j})
                 scores.append(weighted_freq)
 
-    for i in xrange(len(rings1)):
-        for j in xrange(len(rings2)):
+    for i in range(len(rings1)):
+        for j in range(len(rings2)):
             # do not look at the number of nodes in the ring
             # it would be faster, but it results in wrong alignemtn for complex
             # ring systems created from multiple molecules
@@ -351,8 +351,8 @@ def __modular_product(p1, p2, dist1=None, dist2=None, dist_tol=0):
     edges = np.zeros((n, n))
     costs = np.zeros((n, n))
 
-    for i in xrange(n):
-        for j in xrange(i):
+    for i in range(n):
+        for j in range(i):
 
             if nodes[i]["n1"] == nodes[j]["n1"] or \
                nodes[i]["n2"] == nodes[j]["n2"]:
@@ -448,7 +448,7 @@ def __BronKerbosch(edges, P=None, X=None, R=None, degrees=None, neigh=None):
 
     if neigh is None:
         neigh = {}
-        for i in xrange(len(edges)):
+        for i in range(len(edges)):
             neigh[i] = set(np.where(edges[i] > 0)[0])
 
     if len(P) == 0 and len(X) == 0:
@@ -495,8 +495,8 @@ def __align_rings(p1, p2, n1, n2, idx1, idx2, mapping=None, dist1=None,
     if mapping is None:
         mapping = np.zeros((p1.numnodes, p2.numnodes))
 
-        for i in xrange(p1.numnodes):
-            for j in xrange(p2.numnodes):
+        for i in range(p1.numnodes):
+            for j in range(p2.numnodes):
                 weighted_freq, _ = compare_nodes(p1.nodes[i], p2.nodes[j])
                 if weighted_freq > 0.0:
                     mapping[i][j] = weighted_freq
@@ -516,13 +516,13 @@ def __align_rings(p1, p2, n1, n2, idx1, idx2, mapping=None, dist1=None,
     assert len(idx1) == len(idx2), "unequal subgraphs sizes"
     old_len = len(idx1)
 
-    for i in xrange(old_len):
+    for i in range(old_len):
         weighted_freq = mapping[idx1[i], idx2[i]]
         assert weighted_freq > 0, "wrong alignment given"
         nodes.append({"n1": idx1[i], "n2": idx2[i]})
         scores.append(weighted_freq)
 
-    for i in xrange(len(n1)):
+    for i in range(len(n1)):
         possible_matches = np.where(mapping[n1[i], :][:, n2[i]] > 0)
         pairs1 = n1[i][possible_matches[0]]
         pairs2 = n2[i][possible_matches[1]]
@@ -534,7 +534,7 @@ def __align_rings(p1, p2, n1, n2, idx1, idx2, mapping=None, dist1=None,
                                          axis=1))[0]
         else:
             # empty alignment given, accept everything
-            compatible = np.array(range(len(pairs1)))
+            compatible = np.array(list(range(len(pairs1))))
 
         for i in compatible:
             weighted_freq = mapping[pairs1[i], pairs2[i]]
@@ -548,8 +548,8 @@ def __align_rings(p1, p2, n1, n2, idx1, idx2, mapping=None, dist1=None,
     edges = np.zeros((n, n))
     costs = np.zeros((n, n))
 
-    for i in xrange(n):
-        for j in xrange(i):
+    for i in range(n):
+        for j in range(i):
             if nodes[i]["n1"] == nodes[j]["n1"] or \
                nodes[i]["n2"] == nodes[j]["n2"]:
                 continue
@@ -569,7 +569,7 @@ def __align_rings(p1, p2, n1, n2, idx1, idx2, mapping=None, dist1=None,
                     costs[i, j] = costs[j, i] = math.fabs(d1 - d2)
                 edges[i, j] = edges[j, i] = 1.0
 
-    alignment = range(old_len)
+    alignment = list(range(old_len))
     score = np.sum(scores[alignment])
     cost = np.sum(costs[alignment, :][:, alignment]) / 2
     scorecost = score-cost
@@ -619,8 +619,8 @@ def __add_neighbours(p1, p2, n1, n2, idx1, idx2, mapping=None, dist1=None,
     if mapping is None:
         mapping = np.zeros((p1.numnodes, p2.numnodes))
 
-        for i in xrange(p1.numnodes):
-            for j in xrange(p2.numnodes):
+        for i in range(p1.numnodes):
+            for j in range(p2.numnodes):
                 weighted_freq, _ = compare_nodes(p1.nodes[i], p2.nodes[j])
                 if weighted_freq > 0.0:
                     mapping[i][j] = weighted_freq
@@ -747,8 +747,8 @@ def map_pharmacophores(p1, p2, dist_tol=0.0, coarse_grained=True,
 
     mapping = np.zeros((p1.numnodes, p2.numnodes))
 
-    for i in xrange(p1.numnodes):
-        for j in xrange(p2.numnodes):
+    for i in range(p1.numnodes):
+        for j in range(p2.numnodes):
             weighted_freq, _ = compare_nodes(p1.nodes[i], p2.nodes[j])
             if weighted_freq > 0.0:
                 mapping[i][j] = weighted_freq
@@ -770,7 +770,7 @@ def map_pharmacophores(p1, p2, dist_tol=0.0, coarse_grained=True,
     nodes, scores, edges, costs = __modular_product(p1, p2, dist1, dist2,
                                                     dist_tol)
 
-    ring_pairs = [i for i in xrange(len(nodes)) if "members" in nodes[i]]
+    ring_pairs = [i for i in range(len(nodes)) if "members" in nodes[i]]
 
     for clique in __BronKerbosch(edges):
         clique = list(clique)
@@ -813,7 +813,7 @@ def map_pharmacophores(p1, p2, dist_tol=0.0, coarse_grained=True,
         aln1 = []
         aln2 = []
 
-        for i in xrange(len(idx1)):
+        for i in range(len(idx1)):
             s, c, [tmp1, tmp2] = __align_rings(p1, p2, n1[i], n2[i],
                                                idx1[i], idx2[i],
                                                mapping, dist1, dist2,
@@ -826,10 +826,10 @@ def map_pharmacophores(p1, p2, dist_tol=0.0, coarse_grained=True,
                 aln2 = tmp2[:]
 
             if add_neighbours:
-                remaining1 = [node for node in xrange(p1.numnodes)
+                remaining1 = [node for node in range(p1.numnodes)
                               if node not in aln1]
 
-                remaining2 = [node for node in xrange(p2.numnodes)
+                remaining2 = [node for node in range(p2.numnodes)
                               if node not in aln2]
 
                 score, cost, (aln1, aln2) = __add_neighbours(p1, p2, remaining1,
@@ -962,7 +962,7 @@ def combine_pharmacophores(p1, p2, dist_tol=0.0, freq_cutoff=0.0,
     nodes = []
 
     idx = 0
-    for i in xrange(len(mapped_nodes[0])):
+    for i in range(len(mapped_nodes[0])):
         u = p1.nodes[mapped_nodes[0][i]]
         v = p2.nodes[mapped_nodes[1][i]]
         _, types = compare_nodes(u, v)
@@ -974,9 +974,9 @@ def combine_pharmacophores(p1, p2, dist_tol=0.0, freq_cutoff=0.0,
 
     # add edges
     edges = np.zeros((idx, idx))
-    for i in xrange(idx):
+    for i in range(idx):
         no1 = (added[0][i], added[1][i])
-        for j in xrange(i):
+        for j in range(i):
             dist = 0.0
             no2 = (added[0][j], added[1][j])
             freq1 = p1.nodes[no1[0]]["freq"] + p1.nodes[no2[0]]["freq"]
@@ -999,17 +999,17 @@ def combine_pharmacophores(p1, p2, dist_tol=0.0, freq_cutoff=0.0,
     # add unique elements
     freq_cutoff = molecules * freq_cutoff
 
-    to_add = [[i for i in xrange(p1.numnodes) if i not in mapped_nodes[0] and
+    to_add = [[i for i in range(p1.numnodes) if i not in mapped_nodes[0] and
                p1.nodes[i]["freq"] >= freq_cutoff],
-              [i for i in xrange(p2.numnodes) if i not in mapped_nodes[1] and
+              [i for i in range(p2.numnodes) if i not in mapped_nodes[1] and
                p2.nodes[i]["freq"] >= freq_cutoff]]
 
-    for (nr, phar) in {0: p1, 1: p2}.iteritems():
+    for (nr, phar) in {0: p1, 1: p2}.items():
         for n in to_add[nr]:
             added[nr][idx] = n
             new_p.add_node(phar.nodes[n].copy())
             new_p.nodes[idx]["label"] = idx
-            for (k, v) in added[nr].iteritems():
+            for (k, v) in added[nr].items():
                 if phar.edges[n, v] > 0:
                     new_p.add_edge(k, idx, phar.edges[n, v])
             idx += 1
@@ -1025,8 +1025,8 @@ def combine_pharmacophores(p1, p2, dist_tol=0.0, freq_cutoff=0.0,
         # nearest_node[i, j] == id of node from component j, that is nearest to
         # component i
         nearest_node = np.zeros((comp_nr, comp_nr), dtype=int)
-        for i in xrange(comp_nr):
-            for j in xrange(i):
+        for i in range(comp_nr):
+            for j in range(i):
                 shortest_dist = float("inf")
                 nearest_nodes = [None, None]
                 for n1 in components[i]:
@@ -1170,14 +1170,14 @@ def filter_nodes(p, freq_range=(0.0, 1.0), rm_outside=True):
 
     freq_range = [i * p.molecules for i in freq_range]
     if rm_outside:
-        for n in xrange(p.numnodes - 1, -1, -1):
+        for n in range(p.numnodes - 1, -1, -1):
             if new_p.nodes[n]["freq"] < freq_range[0] or \
                new_p.nodes[n]["freq"] > freq_range[1]:
                 new_p.remove_node(n)
                 dist = np.delete(np.delete(dist, n, 0), n, 1)
 
     else:
-        for n in xrange(p.numnodes - 1, -1, -1):
+        for n in range(p.numnodes - 1, -1, -1):
             if new_p.nodes[n]["freq"] >= freq_range[0] or \
                new_p.nodes[n]["freq"] <= freq_range[1]:
                 new_p.remove_node(n)
@@ -1194,8 +1194,8 @@ def filter_nodes(p, freq_range=(0.0, 1.0), rm_outside=True):
         # nearest_node[i, j] == id of node from component j, that is nearest to
         # component i
         nearest_node = np.zeros((comp_nr, comp_nr), dtype=int)
-        for i in xrange(comp_nr):
-            for j in xrange(i):
+        for i in range(comp_nr):
+            for j in range(i):
                 shortest_dist = float("inf")
                 nearest_nodes = [None, None]
                 for n1 in components[i]:
@@ -1210,7 +1210,7 @@ def filter_nodes(p, freq_range=(0.0, 1.0), rm_outside=True):
         shortest_connection = np.argmin(comp_dist, axis=1)
 
         # connect components
-        for i in xrange(comp_nr):
+        for i in range(comp_nr):
             j = shortest_connection[i]
             n1 = nearest_node[i, j]
             n2 = nearest_node[j, i]
@@ -1247,7 +1247,7 @@ def spring_layout(p, c0=0.2, c1=1.0):
 
     def f(x):
         eng = 0.0
-        for i in xrange(p.numnodes):
+        for i in range(p.numnodes):
             nx = x[i] - x[:p.numnodes]
             ny = x[p.numnodes + i] - x[p.numnodes:]
             norms = np.sqrt(nx**2 + ny**2)
@@ -1342,8 +1342,8 @@ def draw(p, layout="rd"):
     # calculate scaling ratio for font
     ax_coeff = 12. / max((axis[1]-axis[0]), (axis[3]-axis[2]))
 
-    for i in xrange(p.numnodes):
-        for j in xrange(i):
+    for i in range(p.numnodes):
+        for j in range(i):
             if p.edges[i, j] > 0:
                 tmp = np.array([pos[i], pos[j]])
                 ax.plot(tmp[:, 0], tmp[:, 1], color='#000000', zorder=1)
