@@ -224,8 +224,8 @@ class ToolkitsTests(unittest.TestCase):
 class UtilsTests(unittest.TestCase):
 
     def setUp(self):
-        from pybel import readstring
-        import decaf.toolkits.ob as ob
+        from rdkit.Chem import MolFromSmiles
+        import decaf.toolkits.rd as rd
 
         self.smiles = ["Cc1c(N)cccc1C(=O)N2CCCC2",
                        "Cc1c(NCCCCC(=O)O)cccc1C(=O)N2CCCC2",
@@ -233,7 +233,7 @@ class UtilsTests(unittest.TestCase):
                        "NCCCCC(=O)O",
                        "O=C(O)CC2CCCC(CC1CCCCC1)C2C(=O)O",
                        "O=C(O)CC2CCCC(CCC1CCCCC1)C2C(=O)O"]
-        self.phars = [ob.phar_from_mol(readstring("smi", s)) for s in
+        self.phars = [rd.phar_from_mol(MolFromSmiles(s)) for s in
                       self.smiles]
 
     def tearDown(self):
