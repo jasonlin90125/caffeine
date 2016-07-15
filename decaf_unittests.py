@@ -446,5 +446,5 @@ class UtilsTests(unittest.TestCase):
         self.assertRaises(ValueError, filter_nodes, p, freq_range=(-1, 0))
         self.assertRaises(ValueError, filter_nodes, p, freq_range=(0, 2))
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main(verbosity=2)

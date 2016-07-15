@@ -11,7 +11,7 @@ import numpy as np
 import math
 import warnings
 
-warnings.simplefilter('always', UserWarning)
+warnings.simplefilter("always", UserWarning)
 
 def compare_nodes(n1, n2):
     """Compare types of two nodes. Return unnormalised similarity score and new
@@ -989,10 +989,10 @@ def combine_pharmacophores(p1, p2, dist_tol=0.0, freq_cutoff=0.0,
 
     # do not warn about empty pharmacophore (nodes might be added latter)
     # warn about empty common part instead
-    warnings.simplefilter('ignore', UserWarning)
+    warnings.simplefilter("ignore", UserWarning)
     new_p = Pharmacophore(nodes=nodes, edges=edges, molecules=molecules,
                           title=title)
-    warnings.simplefilter('always', UserWarning)
+    warnings.simplefilter("always", UserWarning)
     if new_p.numnodes == 0:
         warnings.warn("Empty common part!")
 
@@ -1054,7 +1054,7 @@ def combine_pharmacophores(p1, p2, dist_tol=0.0, freq_cutoff=0.0,
                             shortest_dist = dist
                             nearest_nodes = [n1, n2]
                 comp_dist[i, j] = comp_dist[j, i] = shortest_dist
-                if shortest_dist < float('inf'):
+                if shortest_dist < float("inf"):
                     nearest_node[i, j] = nearest_nodes[1]
                     nearest_node[j, i] = nearest_nodes[0]
 
@@ -1302,16 +1302,16 @@ def draw(p, layout="rd"):
             from decaf.toolkits.rd import layout
             pos = layout(p)
         except Exception as e:
-            raise ImportError('Cannot use "rd" layout! Use "ob" or "spring"'
-                              'instead', e)
+            raise ImportError("Cannot use 'rd' layout! Use 'ob' or 'spring'"
+                              "instead", e)
 
     elif layout == "ob":
         try:
             from decaf.toolkits.ob import layout
             pos = layout(p)
         except Exception as e:
-            raise ImportError('Cannot use "ob" layout! Use "rd" or "spring"'
-                              'instead', e)
+            raise ImportError("Cannot use 'ob' layout! Use 'rd' or 'spring'"
+                              "instead", e)
 
     elif layout == "spring":
         try:
@@ -1319,8 +1319,8 @@ def draw(p, layout="rd"):
         except Exception as e:
             raise ImportError("Cannot use spring layout!", e)
     else:
-        raise ValueError('Wrong layout specified! Use "rd", "ob" or "spring"'
-                         'instead.')
+        raise ValueError("Wrong layout specified! Use 'rd', 'ob' or 'spring'"
+                         "instead.")
 
     ax_coeff = 1.
 
@@ -1330,8 +1330,8 @@ def draw(p, layout="rd"):
         return size
 
     fig, ax = plt.subplots()
-    plt.axis('equal')
-    plt.axis('off')
+    plt.axis("equal")
+    plt.axis("off")
 
     axis = (np.min(pos[:, 0])-1,
             np.max(pos[:, 0])+1,
@@ -1346,7 +1346,7 @@ def draw(p, layout="rd"):
         for j in range(i):
             if p.edges[i, j] > 0:
                 tmp = np.array([pos[i], pos[j]])
-                ax.plot(tmp[:, 0], tmp[:, 1], color='#000000', zorder=1)
+                ax.plot(tmp[:, 0], tmp[:, 1], color="#000000", zorder=1)
 
         r = p.nodes[i]["freq"] / p.molecules * 0.3
         fsize = fontsize(i)
@@ -1358,7 +1358,7 @@ def draw(p, layout="rd"):
             w = Wedge(pos[i], r, theta1, theta2, ec="none", fc=COLORS[t])
             ax.add_artist(w)
             ax.text(pos[i][0], pos[i][1], str(p.nodes[i]["label"]),
-                    color='#000000', ha="center", va="center", size=fsize)
+                    color="#000000", ha="center", va="center", size=fsize)
             theta1 = theta2
 
     plt.show()
