@@ -1244,26 +1244,26 @@ def spring_layout(p, c0=0.2, c1=1.0):
         raise ValueError("Pharmacophore is empty!")
 
     from scipy.optimize import minimize
+    from scipy.spatial.distance import pdist, squareform
 
     def f(x):
-        eng = 0.0
-        for i in range(p.numnodes):
-            nx = x[i] - x[:p.numnodes]
-            ny = x[p.numnodes + i] - x[p.numnodes:]
-            norms = np.sqrt(nx**2 + ny**2)
-            norms[norms == 0] = 0.000001
-            norms[i] = 0.0
-            spring = (norms - p.edges[i])[np.where(p.edges[i] > 0)[0]]**2
-            eng += np.sum(spring) * c1
+        x = x.reshape(int(len(x)/2), 2)
+        eng = 0
+        norms = pdist(x)
+        norms[norms == 0] = 0.000001
+        e = squareform(p.edges)
+        
+        spring = (norms - e)[np.where(e > 0)]**2
+        eng += np.sum(spring) * c1
 
-            repulsive = norms[np.where(p.edges[i] == 0)[0]]
-            eng += np.sum(c0 / repulsive[np.nonzero(repulsive)])
+        repulsive = norms[np.where(e == 0)]
+        eng += np.sum(c0 / repulsive[np.nonzero(repulsive)])
         return eng
 
     x0 = np.random.random(p.numnodes*2)
 
     res = minimize(f, x0)
-    newpositions = res.x.reshape((2, p.numnodes)).T
+    newpositions = res.x.reshape((p.numnodes, 2))
     return newpositions
 
 
