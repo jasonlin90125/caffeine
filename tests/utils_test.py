@@ -10,11 +10,13 @@ import numpy as np
 
 class UtilsTests(unittest.TestCase):
 
+    import sys
+    from glob import glob
+    files = sorted(glob("tests/*.phar" + str(sys.version_info[0])))
+
     def setUp(self):
         from decaf import Pharmacophore
-        from glob import glob
-        self.phars = [Pharmacophore.read(fname)
-                      for fname in sorted(glob("tests/*.phar"))]
+        self.phars = [Pharmacophore.read(fname) for fname in self.files]
 
     def tearDown(self):
         self.phars = None
