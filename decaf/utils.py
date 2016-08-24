@@ -13,6 +13,7 @@ import warnings
 
 warnings.simplefilter("always", UserWarning)
 
+
 def compare_nodes(n1, n2):
     """Compare types of two nodes. Return unnormalised similarity score and new
     dictionary of pharmacophoric properties for nodes combination.
@@ -64,7 +65,7 @@ def get_rings(phar):
 
     Returns:
        list of dicts: nodes representing compressed ring systems
-       list of sets: members of found ring systems ()
+       list of lists: members of found ring systems
     """
 
     if not isinstance(phar, Pharmacophore):
@@ -193,7 +194,7 @@ def dfs(p, n, to_check=None, visited=None):
     Args:
        p (Pharmacophore): model to search
        n (int): id of first node
-       to_check (set, optional): indices of nodes do check
+       to_check (set, optional): indices of nodes to check
        visited (list, optional): list of indicies of already visited nodes; if
        given it will be updated
 
@@ -305,7 +306,6 @@ def __modular_product(p1, p2, dist1=None, dist2=None, dist_tol=0):
          1D numpy array: partial scores coresponging to nodes
          2D numpy array: edges
          2D numpy array: length differences costs for all edges
-        
     """
 
     if dist1 is None:
@@ -689,7 +689,8 @@ def __add_neighbours(p1, p2, n1, n2, idx1, idx2, mapping=None, dist1=None,
 
         s, c, (aln1, aln2) = __add_neighbours(p1, p2, n1[:], n2[:],
                                               idx1+[pair[0]], idx2+[pair[1]],
-                                              mapping, dist1, dist2, dist_tol, compatible)
+                                              mapping, dist1, dist2, dist_tol,
+                                              compatible)
 
         if (s - c > score - cost) or (s - c == score - cost and s > score):
             score = s
@@ -729,7 +730,7 @@ def map_pharmacophores(p1, p2, dist_tol=0.0, coarse_grained=True,
         raise TypeError("Expected Pharmacophore, got %s instead" %
                         type(p2).__name__)
 
-    if not isinstance(dist_tol, int) and not isinstance(dist_tol, float):
+    if not isinstance(dist_tol, (int, float)):
         raise TypeError("dist_tol must be float or int!")
 
     if dist_tol < 0:
@@ -742,7 +743,7 @@ def map_pharmacophores(p1, p2, dist_tol=0.0, coarse_grained=True,
         raise TypeError("add_neighbours must be bool!")
 
     if coarse_grained and add_neighbours:
-        warnings.warn("Neighbours cannot be added to coarse-grained alignment." \
+        warnings.warn("Neighbours cannot be added to coarse-grained alignment."
                       "If you want to add neighbours, use coarse_grained=False")
 
     mapping = np.zeros((p1.numnodes, p2.numnodes))
@@ -832,9 +833,11 @@ def map_pharmacophores(p1, p2, dist_tol=0.0, coarse_grained=True,
                 remaining2 = [node for node in range(p2.numnodes)
                               if node not in aln2]
 
-                score, cost, (aln1, aln2) = __add_neighbours(p1, p2, remaining1,
-                                                             remaining2, aln1[:],
-                                                             aln2[:], mapping,
+                score, cost, (aln1, aln2) = __add_neighbours(p1, p2,
+                                                             remaining1,
+                                                             remaining2,
+                                                             aln1[:], aln2[:],
+                                                             mapping,
                                                              dist1, dist2,
                                                              dist_tol)
 
@@ -875,7 +878,7 @@ def similarity(p1, p2, dist_tol=0.0, coarse_grained=True, add_neighbours=False):
         raise TypeError("Expected Pharmacophore, got %s instead" %
                         type(p2).__name__)
 
-    if not isinstance(dist_tol, int) and not isinstance(dist_tol, float):
+    if not isinstance(dist_tol, (int, float)):
         raise TypeError("dist_tol must be float or int!")
 
     if dist_tol < 0:
@@ -928,13 +931,13 @@ def combine_pharmacophores(p1, p2, dist_tol=0.0, freq_cutoff=0.0,
         raise TypeError("Expected Pharmacophore, got %s instead" %
                         type(p2).__name__)
 
-    if not isinstance(dist_tol, int) and not isinstance(dist_tol, float):
+    if not isinstance(dist_tol, (int, float)):
         raise TypeError("dist_tol must be float or int!")
 
     if dist_tol < 0:
         raise ValueError("dist_tol must be greater than or equal 0")
 
-    if not isinstance(freq_cutoff, int) and not isinstance(freq_cutoff, float):
+    if not isinstance(freq_cutoff, (int, float)):
         raise TypeError("freq_cutoff must be float or int!")
 
     if freq_cutoff < 0 or freq_cutoff > 1:
@@ -1105,7 +1108,7 @@ def inclusive_similarity(p1, p2, dist_tol=0.0, coarse_grained=True,
         raise TypeError("Expected Pharmacophore, got %s instead" %
                         type(p2).__name__)
 
-    if not isinstance(dist_tol, int) and not isinstance(dist_tol,  float):
+    if not isinstance(dist_tol, (int, float)):
         raise TypeError("dist_tol must be float or int!")
 
     if dist_tol < 0:
@@ -1153,10 +1156,10 @@ def filter_nodes(p, freq_range=(0.0, 1.0), rm_outside=True):
     if not isinstance(freq_range, tuple):
         raise TypeError("Invalid freq_range!")
 
-    elif not (len(freq_range) == 2 and
-       (isinstance(freq_range[0], float) or isinstance(freq_range[0], int)) and
-       (isinstance(freq_range[1], float) or isinstance(freq_range[1], int)) and
-       freq_range[0] <= freq_range[1]):
+    elif not (len(freq_range) == 2
+              and isinstance(freq_range[0], (float, int))
+              and isinstance(freq_range[1], (float, int))
+              and freq_range[0] <= freq_range[1]):
         raise ValueError("Invalid freq_range!")
     elif not (freq_range[0] >= 0 and freq_range[1] <= 1):
         raise ValueError("Invalid freq_range! Use values in the range [0,1]")
@@ -1234,8 +1237,7 @@ def spring_layout(p, c0=0.2, c1=1.0):
         raise TypeError("Expected Pharmacophore, got %s instead" %
                         type(p).__name__)
 
-    if not ((isinstance(c0, float) or isinstance(c0, int)) and
-            (isinstance(c1, float) or isinstance(c1, int))):
+    if not (isinstance(c0, (float, int)) and isinstance(c1, (float, int))):
         raise TypeError("Invalid constants!")
     if not (c0 > 0 and c1 > 0):
         raise ValueError("Invalid constants! Use values greater than 0.")

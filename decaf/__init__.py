@@ -81,7 +81,7 @@ class Pharmacophore(object):
         elif len(nodes) != len(edges):
             raise ValueError("Size of edge array does not match nodes number!")
 
-        if isinstance(molecules, float) or isinstance(molecules, int):
+        if isinstance(molecules, (float, int)):
             if molecules <= 0.0:
                 raise ValueError("Molecules number must be greater than 0!")
 
@@ -177,7 +177,7 @@ class Pharmacophore(object):
         """
         if not isinstance(i, int) or not isinstance(j, int):
             raise TypeError("Node indicies must be int!")
-        if not isinstance(dist, int) and not isinstance(dist, float):
+        if not isinstance(dist, (int, float)):
             raise TypeError("Distance must be float or int!")
         if dist < 0:
             raise ValueError("Distance must be greater than or equal 0")
