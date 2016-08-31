@@ -391,6 +391,7 @@ def __modular_product(p1, p2, dist1=None, dist2=None, dist_tol=0):
             is_connected = False
             # compute distances in graphs
             # for ring nodes find shortest distances
+            # note: loop is faster than numpy (a lot of singletons to check)
             d1 = float("inf")
             for p in idxi1:
                 for q in idxj1:
@@ -452,20 +453,21 @@ def __BronKerbosch(edges, P=None, X=None, R=None, degrees=None, neigh=None):
             neigh[i] = set(np.where(edges[i] > 0)[0])
 
     if len(P) == 0 and len(X) == 0:
-        return [R]
+        yield R
     else:
-        cliques = []
         candidates = np.array(list(P | X))
         # try to select pivot which minimizes number of recursive calls
         pivot = candidates[np.argmax(degrees[candidates])]
 
         for v in (P - neigh[pivot]):
-            cliques += __BronKerbosch(edges, degrees=degrees, R=(R | set([v])),
-                                      P=(P & neigh[v]), X=(X & neigh[v]),
-                                      neigh=neigh)
+            for clique in __BronKerbosch(edges, degrees=degrees,
+                                         R=(R | set([v])),
+                                         P=(P & neigh[v]),
+                                         X=(X & neigh[v]),
+                                         neigh=neigh):
+                yield clique
             P = P - set([v])
             X = X | set([v])
-        return cliques
 
 
 def __align_rings(p1, p2, n1, n2, idx1, idx2, mapping=None, dist1=None,
