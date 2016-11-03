@@ -104,7 +104,7 @@ def layout(p):
                 tmp = int(math.ceil(p.edges[i, j])) - 1
                 prev = i + 1
 
-                #add invisible atoms to get right distance
+                # add invisible atoms to get right distance
                 for k in range(tmp):
                     atom = m.OBMol.NewAtom(idx)
                     atom.SetHyb(1)

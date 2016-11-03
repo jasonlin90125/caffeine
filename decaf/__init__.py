@@ -11,15 +11,15 @@ import warnings
 
 warnings.simplefilter('always', UserWarning)
 
-#SMARTS definition of pharmacophore points:
+# SMARTS definition of pharmacophore points:
 PHARS = {"HH": "[#6+0!$(*~[#7,#8,F]),SH0+0v2,s+0,S^3,Cl+0,Br+0,I+0]",  # hydrophobic
          "AR": "[a]",  # aromatic
-         "HA": "[!$([#1,#6,F,Cl,Br,I,o,s,nX3,#7v5,#15v5,#16v4,#16v6,*+1,*+2,*+3])]",   # acceptor  
+         "HA": "[!$([#1,#6,F,Cl,Br,I,o,s,nX3,#7v5,#15v5,#16v4,#16v6,*+1,*+2,*+3])]",   # acceptor
          "HD": "[!$([#6,H0,-,-2,-3]),$([!H0;#7,#8,#9])]",    # donor
          "R": "[r]"}    # ring
 
 
-#colors used for pharmacophore depiction
+# colors used for pharmacophore depiction
 COLORS = {"HH": "#FFFF00",  # hydrophobic
           "AR": "#FF9900",  # aromatic
           "HA": "#6666FF",    # acceptor
@@ -50,7 +50,7 @@ class Pharmacophore(object):
         molecules (float): number of molecules used to create model
 
         title (str): pharmacophore description
-        
+
     Example:
        Pharmacophore created manually from C2H5NH2 and N(C2H5)3 molecules:
 

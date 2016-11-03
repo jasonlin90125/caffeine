@@ -1019,7 +1019,7 @@ def combine_pharmacophores(p1, p2, dist_tol=0.0, freq_cutoff=0.0,
                     new_p.add_edge(k, idx, phar.edges[n, v])
             idx += 1
 
-    #check if new pharmacophore is connected
+    # check if new pharmacophore is connected
     components = split_components(new_p)
     comp_nr = len(components)
 
@@ -1158,10 +1158,10 @@ def filter_nodes(p, freq_range=(0.0, 1.0), rm_outside=True):
     if not isinstance(freq_range, tuple):
         raise TypeError("Invalid freq_range!")
 
-    elif not (len(freq_range) == 2
+    elif not ((len(freq_range) == 2)
               and isinstance(freq_range[0], (float, int))
               and isinstance(freq_range[1], (float, int))
-              and freq_range[0] <= freq_range[1]):
+              and (freq_range[0] <= freq_range[1])):
         raise ValueError("Invalid freq_range!")
     elif not (freq_range[0] >= 0 and freq_range[1] <= 1):
         raise ValueError("Invalid freq_range! Use values in the range [0,1]")
@@ -1188,7 +1188,7 @@ def filter_nodes(p, freq_range=(0.0, 1.0), rm_outside=True):
                 new_p.remove_node(n)
                 dist = np.delete(np.delete(dist, n, 0), n, 1)
 
-    #check if new pharmacophore is connected
+    # check if new pharmacophore is connected
     components = split_components(new_p)
     comp_nr = len(components)
 
@@ -1256,7 +1256,7 @@ def spring_layout(p, c0=0.2, c1=1.0):
         norms = pdist(x)
         norms[norms == 0] = 0.000001
         e = squareform(p.edges)
-        
+
         spring = (norms - e)[np.where(e > 0)]**2
         eng += np.sum(spring) * c1
 

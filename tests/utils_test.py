@@ -109,7 +109,6 @@ class UtilsTests(unittest.TestCase):
                                          2.*min(self.phars[i].numnodes,
                                                 self.phars[j].numnodes))
 
-
     def testCombine(self):
         from decaf.utils import map_pharmacophores, combine_pharmacophores
 

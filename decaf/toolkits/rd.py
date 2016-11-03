@@ -103,7 +103,7 @@ def layout(p):
                 tmp = int(math.ceil(p.edges[i, j])) - 1
                 prev = i
 
-                #add invisible atoms to get right distance
+                # add invisible atoms to get right distance
                 for k in range(tmp):
                     idx = med.AddAtom(Chem.rdchem.Atom("*"))
                     med.AddBond(prev, idx)
