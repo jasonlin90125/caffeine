@@ -15,8 +15,8 @@ setup(
     packages=['decaf',
               'decaf.toolkits',
               'tests'],
-    setup_requires=['numpy>=1.6.2'],
-    install_requires=['numpy>=1.6.2', 'scipy>=0.10', 'matplotlib>=1.3.1'],
+    setup_requires=['numpy>=1.8'],
+    install_requires=['numpy>=1.8', 'scipy>=0.13', 'matplotlib>=1.3.1'],
     test_suite='tests',
     package_data={'tests': ['tests/*.phar']}
 )
