@@ -9,7 +9,7 @@ pipelines:
   default:
     - step:
         script:
-          - conda install -y python=3.5 numpy=1.10 scipy=0.16 matplotlib=1.3.1
+          - conda install -y python=3.5 numpy=1.10 scipy=0.16 matplotlib=1.5.1
           - python setup.py test
 
   custom:
