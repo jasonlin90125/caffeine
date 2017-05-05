@@ -20,9 +20,9 @@ pipelines:
             - python setup.py test
     toolkits_35:
       - step:
-        script:
-          - conda install -y python=3.5 numpy scipy matplotlib
-          - conda install -y -c rdkit rdkit
-          - conda install -y -c openbabel openbabel
-          - python setup.py test
-          - python -m unittest toolkits_tests.toolkits_test
+          script:
+            - conda install -y python=3.5 numpy scipy matplotlib
+            - conda install -y -c rdkit rdkit
+            - conda install -y -c openbabel openbabel
+            - python setup.py test
+            - python -m unittest toolkits_tests.toolkits_test
