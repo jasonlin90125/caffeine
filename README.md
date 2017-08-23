@@ -82,4 +82,10 @@ conda install decaf
 
 Please contact us with comments, suggestions, questions or bug reports:
 
-* Marta M. Stepniewska ( martasd[at]ibb.waw.pl )
+* Marta M. Stepniewska-Dziubinska ( martasd[at]ibb.waw.pl )
+
+## Citing DeCAF ##
+
+If you use DeCAF in your research, please cite:
+
+Stepniewska-Dziubinska, M. M., Zielenkiewicz, P., & Siedlecki, P. (2017). DeCAF—Discrimination, Comparison, Alignment Tool for 2D PHarmacophores. *Molecules*, 22(7), 1128; [doi:10.3390/molecules22071128](http://dx.doi.org/10.3390/molecules22071128)
