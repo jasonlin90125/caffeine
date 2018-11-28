@@ -1068,8 +1068,8 @@ def combine_pharmacophores(p1, p2, dist_tol=0.0, freq_cutoff=0.0,
 
         # connect components
         for i, j in zip(*sorted_connections):
-            n1 = nearest_node[i, j]
-            n2 = nearest_node[j, i]
+            n1 = int(nearest_node[i, j])
+            n2 = int(nearest_node[j, i])
             new_p.add_edge(n1, n2, comp_dist[i, j])
 
             # check if graph is already connected
